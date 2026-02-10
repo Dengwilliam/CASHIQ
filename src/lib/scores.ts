@@ -15,16 +15,17 @@ export const saveScore = (db: Firestore, scoreData: Score) => {
     return;
   }
   const scoresCollection = collection(db, 'scores');
-  addDoc(scoresCollection, {
+  const dataToSave = {
     ...scoreData,
     createdAt: serverTimestamp(),
-  }).catch((serverError) => {
-    console.error("Firestore save error:", serverError);
-    const permissionError = new FirestorePermissionError({
-      path: scoresCollection.path,
-      operation: 'create',
-      requestResourceData: scoreData,
+  };
+  addDoc(scoresCollection, dataToSave)
+    .catch((serverError) => {
+      const permissionError = new FirestorePermissionError({
+        path: scoresCollection.path,
+        operation: 'create',
+        requestResourceData: dataToSave,
+      });
+      errorEmitter.emit('permission-error', permissionError);
     });
-    errorEmitter.emit('permission-error', permissionError);
-  });
 };

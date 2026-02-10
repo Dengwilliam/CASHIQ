@@ -17,6 +17,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { doc, setDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 async function handleSignIn(auth: any, firestore: any) {
   const provider = new GoogleAuthProvider();
@@ -26,15 +28,20 @@ async function handleSignIn(auth: any, firestore: any) {
     // Create or update user profile in Firestore
     if (user) {
       const userRef = doc(firestore, 'users', user.uid);
-      await setDoc(
-        userRef,
-        {
-          displayName: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-        },
-        { merge: true }
-      );
+      const userData = {
+        displayName: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+      };
+      setDoc(userRef, userData, { merge: true })
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: userRef.path,
+                operation: 'update',
+                requestResourceData: userData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
     }
   } catch (error) {
     console.error('Error during sign-in:', error);
