@@ -1,4 +1,4 @@
-import { BarChartHorizontal } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import LeaderboardTable from '@/components/leaderboard/leaderboard-table';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -7,7 +7,7 @@ import AuthButton from '@/components/auth-button';
 import WinnerNotification from '@/components/leaderboard/winner-notification';
 
 export const metadata = {
-  title: 'Leaderboard | FinQuiz Challenge',
+  title: 'Leaderboard | FinChamp',
 };
 
 export const revalidate = 300;
@@ -17,11 +17,10 @@ export default function LeaderboardPage() {
   return (
     <main className="flex min-h-screen w-full flex-col items-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
       <WinnerNotification />
-      <div className="absolute top-0 z-[-2] h-screen w-screen bg-background bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(122,51,255,0.08),rgba(255,255,255,0))]"></div>
-      <div className="absolute top-6 left-6 flex items-center gap-2 text-foreground/80 transition-colors hover:text-foreground">
+      <div className="absolute top-6 left-6 flex items-center gap-2 text-foreground transition-colors hover:text-foreground/80">
         <Link href="/" className="flex items-center gap-2">
-          <BarChartHorizontal className="h-6 w-6" />
-          <h1 className="text-lg font-semibold">FinQuiz Challenge</h1>
+          <Trophy className="h-8 w-8 text-accent" />
+          <h1 className="text-2xl font-black">FinChamp</h1>
         </Link>
       </div>
       <div className="absolute top-4 right-4">

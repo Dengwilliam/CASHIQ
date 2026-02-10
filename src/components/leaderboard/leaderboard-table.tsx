@@ -6,7 +6,6 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { startOfWeek, endOfWeek, format } from 'date-fns';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trophy, Award, Medal, Star } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type ScoreEntry = {
@@ -15,8 +14,6 @@ type ScoreEntry = {
   score: number;
   createdAt: Timestamp;
 };
-
-const ENTRY_FEE = 25000;
 
 const prizeDistribution: { [key: number]: number } = {
   1: 0.30, // 30%
@@ -92,30 +89,20 @@ export default function LeaderboardTable() {
     return () => unsubscribe();
   }, [firestore, week]);
 
-
-  const totalPrizePool = totalEntries * ENTRY_FEE;
-
-  const getPrize = (rank: number) => {
+  const getPrizePercentage = (rank: number) => {
     const percentage = prizeDistribution[rank];
     if (percentage) {
-      return `SSP ${(totalPrizePool * percentage).toLocaleString()}`;
+      return `${(percentage * 100)}%`;
     }
     return '–';
   };
 
   const getRankIcon = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return <Trophy className="h-6 w-6 text-yellow-500" />;
-      case 2:
-        return <Award className="h-6 w-6 text-slate-400" />;
-      case 3:
-        return <Medal className="h-6 w-6 text-orange-400" />;
-      case 4:
-        return <Star className="h-6 w-6 text-blue-400" />;
-      default:
-        return null;
+    const iconBaseClass = "flex items-center justify-center h-7 w-7 rounded-md font-bold text-lg";
+    if (rank <= 4) {
+        return <div className={`${iconBaseClass} bg-primary text-primary-foreground`}>{rank}</div>;
     }
+    return <div className="flex items-center justify-center h-7 w-7">{rank}</div>;
   };
 
   return (
@@ -124,13 +111,7 @@ export default function LeaderboardTable() {
         <CardTitle className="text-3xl font-bold">Weekly Leaderboard</CardTitle>
         <CardDescription>
           {week ? `Top 10 players for ${format(week.start, 'MMM d')} – ${format(week.end, 'MMM d, yyyy')}` : 'Top 10 players of the week.'}
-          <br/>
-          The board resets every Monday. Prizes are based on entries for the current week.
         </CardDescription>
-        <div className="pt-4">
-            <p className="text-sm text-muted-foreground">Weekly Entries: {totalEntries}</p>
-            <p className="text-lg font-bold text-primary">Current Prize Pool: SSP {totalPrizePool.toLocaleString()}</p>
-        </div>
       </CardHeader>
       <CardContent>
         {loading && <LeaderboardSkeleton />}
@@ -148,22 +129,19 @@ export default function LeaderboardTable() {
               <TableRow>
                 <TableHead className="w-[80px]">Rank</TableHead>
                 <TableHead>Player</TableHead>
-                <TableHead className="text-right">Score</TableHead>
-                <TableHead className="text-right">Prize</TableHead>
+                <TableHead className="text-right">Prize Share</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {scores.map((score, index) => (
-                <TableRow key={score.id} className={index < 4 ? 'font-bold bg-primary/5' : ''}>
+                <TableRow key={score.id} className={index < 4 ? 'font-bold' : ''}>
                   <TableCell>
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="w-6 text-center font-semibold">{index + 1}</span>
+                    <div className="flex items-center justify-center">
                       {getRankIcon(index + 1)}
                     </div>
                   </TableCell>
                   <TableCell>{score.playerName}</TableCell>
-                  <TableCell className="text-right">{score.score}</TableCell>
-                  <TableCell className="text-right text-emerald-600">{getPrize(index + 1)}</TableCell>
+                  <TableCell className="text-right font-semibold text-primary">{getPrizePercentage(index + 1)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

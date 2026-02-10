@@ -60,48 +60,22 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
     }
     return (
        <Button type="submit" className="w-full" size="lg">
-          Pay & Start Quiz
+          Start Quiz
           <ArrowRight className="ml-2 h-5 w-5" />
         </Button>
     )
   }
 
   return (
-    <Card className="border">
+    <Card className="border-none shadow-none bg-transparent">
       <CardHeader className="text-center">
-        <CardTitle className="text-3xl font-bold text-primary">Financial Quiz Challenge</CardTitle>
-        <CardDescription className="pt-2">Test your knowledge and compete for weekly prizes!</CardDescription>
+        <CardTitle className="text-5xl md:text-7xl font-black text-foreground">Learn. Play. Earn.</CardTitle>
+        <CardDescription className="text-lg md:text-xl text-foreground/80 pt-2">
+          Gamified financial literacy with weekly cash rewards
+        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          <div className="text-center p-4 bg-secondary/50 rounded-lg">
-            <p className="text-sm text-muted-foreground">Entry Fee</p>
-            <p className="text-2xl font-bold text-primary">25,000 SSP</p>
-          </div>
-           <div className="text-center p-4 border border-dashed border-primary/50 rounded-lg">
-              <h3 className="text-lg font-semibold text-primary">Weekly Competition!</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                  Top 4 players win a share of the total weekly entry fees!
-              </p>
-              <div className="grid grid-cols-4 gap-2 mt-3 text-center">
-                  <div>
-                      <p className="font-bold text-lg text-primary/80">30%</p>
-                      <p className="text-xs text-muted-foreground">1st Place</p>
-                  </div>
-                  <div>
-                      <p className="font-bold text-lg text-primary/80">20%</p>
-                      <p className="text-xs text-muted-foreground">2nd Place</p>
-                  </div>
-                  <div>
-                      <p className="font-bold text-lg text-primary/80">10%</p>
-                      <p className="text-xs text-muted-foreground">3rd Place</p>
-                  </div>
-                  <div>
-                      <p className="font-bold text-lg text-primary/80">5%</p>
-                      <p className="text-xs text-muted-foreground">4th Place</p>
-                  </div>
-              </div>
-          </div>
+        <CardContent className="space-y-4 pt-8">
           {user && (
             <div className="text-center text-lg">
               Welcome, <span className="font-bold text-primary">{user.displayName}!</span>
