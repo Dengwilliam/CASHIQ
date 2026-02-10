@@ -1,7 +1,6 @@
 'use client';
 
 import { FirebaseProvider, useFirebase, useFirebaseApp, useAuth, useFirestore } from './provider';
-import { FirebaseClientProvider } from './client-provider';
 import { useCollection, useMemoFirebase } from './firestore/use-collection';
 import { useDoc } from './firestore/use-doc';
 import { useUser } from './auth/use-user';
@@ -16,7 +15,6 @@ export function initializeFirebase() {
 
 export {
     FirebaseProvider,
-    FirebaseClientProvider,
     useCollection,
     useDoc,
     useUser,
