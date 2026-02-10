@@ -20,7 +20,7 @@ export default function ResultScreen({ score, onRestart, playerName }: ResultScr
   };
 
   return (
-    <Card className="text-center border-secondary bg-card/60 backdrop-blur-xl">
+    <Card className="text-center border">
       <CardHeader>
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 mb-4">
           <Trophy className="h-10 w-10 text-primary" />

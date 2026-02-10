@@ -63,23 +63,23 @@ export default function QuizScreen({ question, onAnswer, onTimeout, score, quest
       return 'justify-start';
     }
     if (answer.text === selectedAnswer?.text) {
-      return answer.isCorrect ? 'bg-green-500/20 border-green-500 text-green-300 hover:bg-green-500/30 justify-between' : 'bg-destructive/20 border-destructive text-destructive-foreground hover:bg-destructive/30 justify-between';
+      return answer.isCorrect ? 'bg-emerald-500/10 border-emerald-500 text-emerald-700 hover:bg-emerald-500/20 justify-between' : 'bg-red-500/10 border-red-500 text-red-700 hover:bg-red-500/20 justify-between';
     }
     if (answer.isCorrect) {
-      return 'bg-green-500/20 border-green-500 text-green-300 justify-between';
+      return 'bg-emerald-500/10 border-emerald-500 text-emerald-700 justify-between';
     }
     return 'justify-start opacity-50';
   };
   
   const getIcon = (answer: Answer) => {
     if (!isAnswered) return null;
-    if (answer.isCorrect) return <CheckCircle className="h-5 w-5 text-green-500" />;
-    if (answer.text === selectedAnswer?.text && !answer.isCorrect) return <XCircle className="h-5 w-5 text-destructive" />;
+    if (answer.isCorrect) return <CheckCircle className="h-5 w-5 text-emerald-500" />;
+    if (answer.text === selectedAnswer?.text && !answer.isCorrect) return <XCircle className="h-5 w-5 text-red-500" />;
     return null;
   }
 
   return (
-    <Card className="w-full border-secondary bg-card/60 backdrop-blur-xl">
+    <Card className="w-full border">
       <CardHeader>
         <div className="flex justify-between items-center mb-4">
           <p className="text-sm text-muted-foreground">Score: <span className="font-bold text-primary">{score}</span></p>

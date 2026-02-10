@@ -126,7 +126,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
-      <div className="absolute top-0 z-[-2] h-screen w-screen bg-background bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(122,51,255,0.15),rgba(255,255,255,0))]"></div>
+      <div className="absolute top-0 z-[-2] h-screen w-screen bg-background bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(122,51,255,0.08),rgba(255,255,255,0))]"></div>
        <div className="absolute top-6 left-6 flex items-center gap-2 text-foreground/80 transition-colors hover:text-foreground">
           <BarChartHorizontal className="h-6 w-6" />
           <h1 className="text-lg font-semibold">FinQuiz Challenge</h1>

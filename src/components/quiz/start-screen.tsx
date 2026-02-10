@@ -31,7 +31,7 @@ export default function StartScreen({ onStart }: StartScreenProps) {
   };
 
   return (
-    <Card className="border-secondary bg-card/60 backdrop-blur-xl">
+    <Card className="border">
       <CardHeader className="text-center">
         <CardTitle className="text-3xl font-bold text-primary">Financial Quiz Challenge</CardTitle>
         <CardDescription className="pt-2">Test your knowledge and compete for weekly prizes!</CardDescription>

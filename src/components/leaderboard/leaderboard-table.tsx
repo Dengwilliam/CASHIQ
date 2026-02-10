@@ -88,7 +88,7 @@ export default function LeaderboardTable() {
   };
 
   return (
-    <Card className="border-secondary bg-card/60 backdrop-blur-xl">
+    <Card className="border">
       <CardHeader className="text-center">
         <CardTitle className="text-3xl font-bold">Weekly Leaderboard</CardTitle>
         <CardDescription>Top 10 players of the week. Prizes are calculated based on total entries.</CardDescription>
@@ -112,7 +112,7 @@ export default function LeaderboardTable() {
             </TableHeader>
             <TableBody>
               {scores.map((score, index) => (
-                <TableRow key={score.id} className={index < 4 ? 'font-bold bg-white/5' : ''}>
+                <TableRow key={score.id} className={index < 4 ? 'font-bold bg-primary/5' : ''}>
                   <TableCell>
                     <div className="flex items-center justify-center">
                       {getRankIcon(index + 1)}
@@ -120,7 +120,7 @@ export default function LeaderboardTable() {
                   </TableCell>
                   <TableCell>{score.playerName}</TableCell>
                   <TableCell className="text-right">{score.score}</TableCell>
-                  <TableCell className="text-right text-green-400">{getPrize(index + 1)}</TableCell>
+                  <TableCell className="text-right text-emerald-600">{getPrize(index + 1)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
