@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, limit, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { startOfWeek, endOfWeek, format } from 'date-fns';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -13,10 +13,7 @@ type ScoreEntry = {
   id: string;
   playerName: string;
   score: number;
-  createdAt: {
-    seconds: number;
-    nanoseconds: number;
-  };
+  createdAt: Timestamp;
 };
 
 const ENTRY_FEE = 25000;
@@ -64,6 +61,7 @@ export default function LeaderboardTable() {
         where('createdAt', '>=', week.start),
         where('createdAt', '<=', week.end),
         orderBy('score', 'desc'),
+        orderBy('createdAt', 'asc'),
         limit(10)
     );
   }, [firestore, week]);
