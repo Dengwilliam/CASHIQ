@@ -49,7 +49,7 @@ export default function LeaderboardTable() {
 
   const scoresQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, 'scores'), orderBy('score', 'desc'), limit(10));
+    return query(collection(firestore, 'scores'), orderBy('score', 'desc'), orderBy('createdAt', 'asc'), limit(10));
   }, [firestore]);
 
   const { data: scores, loading, error } = useCollection<ScoreEntry>(scoresQuery);
