@@ -63,10 +63,10 @@ export default function QuizScreen({ question, onAnswer, onTimeout, score, quest
       return 'justify-start';
     }
     if (answer.text === selectedAnswer?.text) {
-      return answer.isCorrect ? 'bg-green-500/20 border-green-500 text-green-800 dark:text-green-300 hover:bg-green-500/30 justify-between' : 'bg-destructive/20 border-destructive text-destructive-foreground hover:bg-destructive/30 justify-between';
+      return answer.isCorrect ? 'bg-green-500/20 border-green-500 text-green-300 hover:bg-green-500/30 justify-between' : 'bg-destructive/20 border-destructive text-destructive-foreground hover:bg-destructive/30 justify-between';
     }
     if (answer.isCorrect) {
-      return 'bg-green-500/20 border-green-500 text-green-800 dark:text-green-300 justify-between';
+      return 'bg-green-500/20 border-green-500 text-green-300 justify-between';
     }
     return 'justify-start opacity-50';
   };
@@ -79,7 +79,7 @@ export default function QuizScreen({ question, onAnswer, onTimeout, score, quest
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full border-secondary bg-card/60 backdrop-blur-xl">
       <CardHeader>
         <div className="flex justify-between items-center mb-4">
           <p className="text-sm text-muted-foreground">Score: <span className="font-bold text-primary">{score}</span></p>
