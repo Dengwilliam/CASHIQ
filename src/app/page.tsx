@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { BarChartHorizontal } from "lucide-react";
 import { collection, query, where, getDocs, type Timestamp } from 'firebase/firestore';
-import { startOfWeek, endOfWeek } from 'date-fns';
+import { startOfWeek, endOfWeek, isMonday } from 'date-fns';
 
 
 import StartScreen from "@/components/quiz/start-screen";
@@ -39,6 +39,20 @@ export default function Home() {
   const firestore = useFirestore();
   const { user, loading } = useUser();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const today = new Date();
+    const newQuizNotificationKey = `new_quiz_notification_${startOfWeek(today, { weekStartsOn: 1 }).toISOString()}`;
+    
+    if (isMonday(today) && !localStorage.getItem(newQuizNotificationKey)) {
+        toast({
+            title: "New Quiz Available!",
+            description: "A new week's challenge has begun. Test your knowledge now!",
+            duration: 7000,
+        });
+        localStorage.setItem(newQuizNotificationKey, 'true');
+    }
+  }, [toast]);
 
   const setupGame = useCallback(() => {
     const shuffledQuestions = shuffleArray(allQuestions).slice(0, QUESTIONS_PER_GAME);
