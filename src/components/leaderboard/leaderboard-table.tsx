@@ -83,7 +83,7 @@ export default function LeaderboardTable() {
       case 4:
         return <Star className="h-6 w-6 text-blue-400" />;
       default:
-        return <span className="w-6 text-center font-semibold">{rank}</span>;
+        return null;
     }
   };
 
@@ -104,7 +104,7 @@ export default function LeaderboardTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[50px]">Rank</TableHead>
+                <TableHead className="w-[80px]">Rank</TableHead>
                 <TableHead>Player</TableHead>
                 <TableHead className="text-right">Score</TableHead>
                 <TableHead className="text-right">Prize</TableHead>
@@ -114,7 +114,8 @@ export default function LeaderboardTable() {
               {scores.map((score, index) => (
                 <TableRow key={score.id} className={index < 4 ? 'font-bold bg-primary/5' : ''}>
                   <TableCell>
-                    <div className="flex items-center justify-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="w-6 text-center font-semibold">{index + 1}</span>
                       {getRankIcon(index + 1)}
                     </div>
                   </TableCell>
