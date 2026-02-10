@@ -2,7 +2,7 @@
 
 import {
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
   signOut,
   type Auth,
 } from 'firebase/auth';
@@ -16,11 +16,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { doc, setDoc, type Firestore } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
-import { useToast } from '@/hooks/use-toast';
 
 function handleSignOut(auth: Auth) {
   signOut(auth);
@@ -29,40 +24,10 @@ function handleSignOut(auth: Auth) {
 export default function AuthButton() {
   const { user, loading } = useUser();
   const auth = useAuth();
-  const firestore = useFirestore();
-  const { toast } = useToast();
 
-  const handleSignIn = async () => {
+  const handleSignIn = () => {
     const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      // Create or update user profile in Firestore
-      if (user) {
-        const userRef = doc(firestore, 'users', user.uid);
-        const userData = {
-          displayName: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-        };
-        setDoc(userRef, userData, { merge: true })
-          .catch((serverError) => {
-              const permissionError = new FirestorePermissionError({
-                  path: userRef.path,
-                  operation: 'update',
-                  requestResourceData: userData,
-              });
-              errorEmitter.emit('permission-error', permissionError);
-          });
-      }
-    } catch (error: any) {
-        console.error("Google Sign-In Error:", error);
-        toast({
-            variant: "destructive",
-            title: "Sign-In Failed",
-            description: error.message || "An unexpected error occurred during sign-in."
-        });
-    }
+    signInWithRedirect(auth, provider);
   };
 
   if (loading) {
