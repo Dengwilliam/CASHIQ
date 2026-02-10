@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, where, onSnapshot } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { startOfWeek, endOfWeek, format } from 'date-fns';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Trophy, Award, Medal, Star } from 'lucide-react';
@@ -46,21 +47,42 @@ function LeaderboardSkeleton() {
 export default function LeaderboardTable() {
   const firestore = useFirestore();
   const [totalEntries, setTotalEntries] = useState(0);
+  const [week, setWeek] = useState<{ start: Date; end: Date } | null>(null);
+
+  useEffect(() => {
+    const today = new Date();
+    // Week starts on Monday and ends on Sunday at midnight.
+    const start = startOfWeek(today, { weekStartsOn: 1 });
+    const end = endOfWeek(today, { weekStartsOn: 1 });
+    setWeek({ start, end });
+  }, []);
 
   const scoresQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'scores'), orderBy('score', 'desc'), limit(10));
-  }, [firestore]);
+    if (!firestore || !week) return null;
+    return query(
+        collection(firestore, 'scores'), 
+        where('createdAt', '>=', week.start),
+        where('createdAt', '<=', week.end),
+        orderBy('score', 'desc'),
+        limit(10)
+    );
+  }, [firestore, week]);
 
   const { data: scores, loading, error } = useCollection<ScoreEntry>(scoresQuery);
 
   useEffect(() => {
-    if (!firestore) return;
+    if (!firestore || !week) return;
+    
     const scoresCol = collection(firestore, 'scores');
-    getDocs(scoresCol).then(snapshot => {
+    const q = query(scoresCol, where('createdAt', '>=', week.start), where('createdAt', '<=', week.end));
+
+    const unsubscribe = onSnapshot(q, snapshot => {
         setTotalEntries(snapshot.size);
     });
-  }, [firestore]);
+
+    return () => unsubscribe();
+  }, [firestore, week]);
+
 
   const totalPrizePool = totalEntries * ENTRY_FEE;
 
@@ -91,15 +113,26 @@ export default function LeaderboardTable() {
     <Card className="border">
       <CardHeader className="text-center">
         <CardTitle className="text-3xl font-bold">Weekly Leaderboard</CardTitle>
-        <CardDescription>Top 10 players of the week. Prizes are calculated based on total entries.</CardDescription>
+        <CardDescription>
+          {week ? `Top 10 players for ${format(week.start, 'MMM d')} – ${format(week.end, 'MMM d, yyyy')}` : 'Top 10 players of the week.'}
+          <br/>
+          The board resets every Monday. Prizes are based on entries for the current week.
+        </CardDescription>
         <div className="pt-4">
-            <p className="text-sm text-muted-foreground">Total Entries: {totalEntries}</p>
-            <p className="text-lg font-bold text-primary">Total Prize Pool: SSP {totalPrizePool.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground">Weekly Entries: {totalEntries}</p>
+            <p className="text-lg font-bold text-primary">Current Prize Pool: SSP {totalPrizePool.toLocaleString()}</p>
         </div>
       </CardHeader>
       <CardContent>
         {loading && <LeaderboardSkeleton />}
-        {error && <p className="text-center text-destructive">Could not load leaderboard. Please try again later.</p>}
+        {error && (
+          <div className="text-center text-destructive p-4 border border-destructive/50 bg-destructive/10 rounded-md">
+            <p className="font-bold">Could not load leaderboard.</p>
+            <p className="text-sm mt-2">
+                This feature requires a database configuration. A link to create it may have been printed in your browser's developer console. Please open the console, click the link, and then refresh this page.
+            </p>
+          </div>
+        )}
         {scores && !loading && (
           <Table>
             <TableHeader>
