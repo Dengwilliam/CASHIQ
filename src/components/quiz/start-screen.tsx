@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, BarChart } from 'lucide-react';
+import { ArrowRight, BarChart, CircleDollarSign } from 'lucide-react';
 import type { User } from 'firebase/auth';
 import Link from 'next/link';
 
@@ -69,7 +69,10 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
   return (
     <Card className="border-none shadow-none bg-transparent">
       <CardHeader className="text-center">
-        <CardTitle className="text-5xl md:text-7xl font-black text-foreground">Learn. Play. Earn.</CardTitle>
+        <CardTitle className="text-5xl md:text-7xl font-black text-foreground flex items-center justify-center flex-wrap gap-x-4">
+          <span>Learn. Play. Earn.</span>
+          <CircleDollarSign className="w-12 h-12 md:w-16 md:h-16 text-primary" />
+        </CardTitle>
         <CardDescription className="text-lg md:text-xl text-foreground/80 pt-2">
           Gamified financial literacy with weekly cash rewards
         </CardDescription>
