@@ -15,7 +15,7 @@ interface FirebaseContextType {
 
 const FirebaseContext = createContext<FirebaseContextType | null>(null);
 
-function initializeFirebase() {
+function initializeFirebaseInstances() {
   if (getApps().length) {
     const app = getApp();
     const auth = getAuth(app);
@@ -32,7 +32,7 @@ function initializeFirebase() {
 export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const firebase = useMemo(() => initializeFirebase(), []);
+  const firebase = useMemo(() => initializeFirebaseInstances(), []);
 
   return (
     <FirebaseContext.Provider value={firebase}>

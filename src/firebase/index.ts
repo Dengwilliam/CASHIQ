@@ -1,10 +1,5 @@
 'use client';
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { firebaseConfig } from './config';
-
 import { FirebaseProvider, useFirebase, useFirebaseApp, useAuth, useFirestore } from './provider';
 import { FirebaseClientProvider } from './client-provider';
 import { useCollection, useMemoFirebase } from './firestore/use-collection';
@@ -13,17 +8,10 @@ import { useUser } from './auth/use-user';
 
 
 export function initializeFirebase() {
-    if (getApps().length) {
-      const app = getApp();
-      const auth = getAuth(app);
-      const firestore = getFirestore(app);
-      return { app, auth, firestore };
-    } else {
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      const firestore = getFirestore(app);
-      return { app, auth, firestore };
-    }
+    // This function is deprecated and the logic is now in the provider.
+    // It is kept for compatibility but should not be used.
+    console.warn("initializeFirebase from firebase/index.ts is deprecated. Firebase is initialized in FirebaseProvider.");
+    return {} as any;
 }
 
 export {

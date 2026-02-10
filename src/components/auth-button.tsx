@@ -4,6 +4,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
+  type Auth,
 } from 'firebase/auth';
 import { useAuth, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -15,12 +16,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, type Firestore } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-async function handleSignIn(auth: any, firestore: any) {
+async function handleSignIn(auth: Auth, firestore: Firestore) {
   const provider = new GoogleAuthProvider();
   try {
     const result = await signInWithPopup(auth, provider);
@@ -48,7 +49,7 @@ async function handleSignIn(auth: any, firestore: any) {
   }
 }
 
-function handleSignOut(auth: any) {
+function handleSignOut(auth: Auth) {
   signOut(auth);
 }
 
