@@ -3,6 +3,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trophy, RotateCw } from 'lucide-react';
+import Link from 'next/link';
 
 type ResultScreenProps = {
   score: number;
@@ -36,10 +37,15 @@ export default function ResultScreen({ score, onRestart, playerName }: ResultScr
         </div>
         <p className="text-muted-foreground italic">{getResultMessage()}</p>
       </CardContent>
-      <CardFooter>
-        <Button onClick={onRestart} className="w-full" size="lg">
+      <CardFooter className="flex-col sm:flex-row gap-2">
+        <Button onClick={onRestart} className="w-full" size="lg" variant="outline">
           <RotateCw className="mr-2 h-5 w-5" />
           Play Again
+        </Button>
+        <Button asChild className="w-full" size="lg">
+          <Link href="/leaderboard">
+            View Leaderboard
+          </Link>
         </Button>
       </CardFooter>
     </Card>

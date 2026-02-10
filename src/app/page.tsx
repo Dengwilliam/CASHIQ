@@ -9,6 +9,9 @@ import ResultScreen from "@/components/quiz/result-screen";
 import type { Question, Answer } from "@/lib/questions";
 import { questions as allQuestions } from "@/lib/questions";
 import { useToast } from "@/hooks/use-toast";
+import { useFirestore } from "@/firebase";
+import { saveScore } from "@/lib/scores";
+
 
 type GameState = "start" | "quiz" | "results";
 
@@ -27,6 +30,7 @@ export default function Home() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
+  const { firestore } = useFirestore();
   const { toast } = useToast();
 
   const setupGame = useCallback(() => {
@@ -41,6 +45,12 @@ export default function Home() {
   useEffect(() => {
     setupGame();
   }, [setupGame]);
+
+  useEffect(() => {
+    if (gameState === "results" && firestore && playerName) {
+      saveScore(firestore, { playerName, score });
+    }
+  }, [gameState, firestore, playerName, score]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {

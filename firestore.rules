@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /scores/{scoreId} {
+      allow read;
+      allow create: if request.resource.data.playerName != null && request.resource.data.playerName != '' && request.resource.data.score is number && request.resource.data.score >= 0;
+      allow update, delete: if false;
+    }
+  }
+}

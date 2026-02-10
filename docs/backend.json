@@ -1,0 +1,36 @@
+{
+  "entities": {
+    "score": {
+      "title": "Score",
+      "description": "Represents a score entry for the quiz.",
+      "type": "object",
+      "properties": {
+        "playerName": {
+          "type": "string",
+          "description": "The name of the player."
+        },
+        "score": {
+          "type": "number",
+          "description": "The score achieved by the player."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of when the score was submitted."
+        }
+      },
+      "required": ["playerName", "score", "createdAt"]
+    }
+  },
+  "auth": {
+    "providers": []
+  },
+  "firestore": {
+    "/scores/{scoreId}": {
+      "schema": {
+        "$ref": "#/backend/entities/score"
+      },
+      "description": "Stores quiz scores for the leaderboard."
+    }
+  }
+}
