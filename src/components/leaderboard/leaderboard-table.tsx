@@ -106,7 +106,7 @@ export default function LeaderboardTable() {
   };
 
   return (
-    <Card className="border">
+    <Card className="bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
       <CardHeader className="text-center">
         <CardTitle className="text-3xl font-bold">Weekly Leaderboard</CardTitle>
         <CardDescription>

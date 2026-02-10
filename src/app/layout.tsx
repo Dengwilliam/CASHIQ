@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { FirebaseProvider } from '@/firebase/provider';
 
 export const metadata: Metadata = {
-  title: 'FinChamp',
+  title: 'FinQuiz Challenge',
   description: 'Gamified financial literacy with weekly cash rewards',
 };
 

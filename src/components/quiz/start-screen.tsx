@@ -67,7 +67,7 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
   }
 
   return (
-    <Card className="border-none shadow-none bg-transparent">
+    <Card className="bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
       <CardHeader className="text-center">
         <CardTitle className="text-5xl md:text-7xl font-black text-foreground flex items-center justify-center flex-wrap gap-x-4">
           <span>Learn. Play. Earn.</span>
@@ -79,7 +79,7 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4 pt-8">
-            <div className="text-center p-4 bg-secondary/50 rounded-lg">
+            <div className="text-center p-4 bg-secondary rounded-lg">
                 <p className="text-sm text-muted-foreground">Entry Fee</p>
                 <p className="text-2xl font-bold text-primary">25,000 SSP</p>
             </div>
@@ -90,25 +90,25 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
                 </p> 
                 <div className="grid grid-cols-4 gap-2 mt-3 text-center">
                     <div>
-                        <p className="font-bold text-lg text-primary/80">30%</p>
+                        <p className="font-semibold text-lg text-primary/80">30%</p>
                         <p className="text-xs text-muted-foreground">1st Place</p>
                     </div>
                     <div>
-                        <p className="font-bold text-lg text-primary/80">20%</p>
+                        <p className="font-semibold text-lg text-primary/80">20%</p>
                         <p className="text-xs text-muted-foreground">2nd Place</p>
                     </div>
                     <div>
-                        <p className="font-bold text-lg text-primary/80">10%</p>
+                        <p className="font-semibold text-lg text-primary/80">10%</p>
                         <p className="text-xs text-muted-foreground">3rd Place</p>
                     </div>
                     <div>
-                        <p className="font-bold text-lg text-primary/80">5%</p>
+                        <p className="font-semibold text-lg text-primary/80">5%</p>
                         <p className="text-xs text-muted-foreground">4th Place</p>
                     </div>
                 </div>
             </div>
           {user && (
-            <div className="text-center text-lg">
+            <div className="text-center text-lg pt-4">
               Welcome, <span className="font-bold text-primary">{user.displayName}!</span>
             </div>
           )}

@@ -61,10 +61,10 @@ export default function LoginPage() {
         <div className="absolute top-6 left-6 flex items-center gap-2 text-foreground">
             <Link href="/" className="flex items-center gap-2">
                 <Trophy className="h-8 w-8 text-accent" />
-                <h1 className="text-2xl font-black">FinChamp</h1>
+                <h1 className="text-2xl font-black">FinQuiz Challenge</h1>
             </Link>
          </div>
-      <Card className="w-full max-w-sm border">
+      <Card className="w-full max-w-sm bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
         <CardHeader>
           <CardTitle>Log In</CardTitle>
           <CardDescription>Enter your credentials to access your account.</CardDescription>

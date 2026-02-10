@@ -213,7 +213,7 @@ export default function Home() {
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
        <div className="absolute top-6 left-6 flex items-center gap-2 text-foreground">
           <Trophy className="h-8 w-8 text-accent" />
-          <h1 className="text-2xl font-black">FinChamp</h1>
+          <h1 className="text-2xl font-black">FinQuiz Challenge</h1>
        </div>
       <div className="absolute top-4 right-4">
         <AuthButton />

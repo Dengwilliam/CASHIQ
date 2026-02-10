@@ -20,10 +20,10 @@ export default function ResultScreen({ score, onRestart, playerName }: ResultScr
   };
 
   return (
-    <Card className="text-center border">
+    <Card className="text-center bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
       <CardHeader>
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 mb-4">
-          <Trophy className="h-10 w-10 text-primary" />
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 mb-4">
+          <Trophy className="h-12 w-12 text-primary" />
         </div>
         <CardTitle className="text-3xl font-bold">Quiz Finished!</CardTitle>
         <CardDescription className="pt-2">
@@ -31,7 +31,7 @@ export default function ResultScreen({ score, onRestart, playerName }: ResultScr
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="text-center p-6 bg-secondary/50 rounded-lg">
+        <div className="text-center p-6 bg-secondary rounded-lg">
           <p className="text-sm text-muted-foreground">Your Final Score</p>
           <p className="text-5xl font-bold text-primary">{score}</p>
         </div>

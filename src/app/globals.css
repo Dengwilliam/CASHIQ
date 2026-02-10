@@ -4,26 +4,38 @@
 
 @layer base {
   :root {
-    --background: 44 100% 85%;
-    --foreground: 232 29% 18%;
+    --background: 228 57% 94%; /* #E6E9F5 */
+    --foreground: 238 54% 17%; /* #202242 */
+    
     --card: 0 0% 100%;
-    --card-foreground: 232 29% 18%;
+    --card-foreground: 238 54% 17%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 232 29% 18%;
-    --primary: 141 73% 42%;
+    --popover-foreground: 238 54% 17%;
+    
+    --primary: 238 54% 37%; /* #2E3192 */
     --primary-foreground: 0 0% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220 8.9% 46.1%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 232 29% 23%;
-    --accent-foreground: 0 0% 98%;
+
+    --secondary: 228 40% 90%;
+    --secondary-foreground: 238 54% 25%;
+
+    --muted: 228 40% 90%;
+    --muted-foreground: 238 30% 45%;
+
+    --accent: 42 100% 67%; /* #FFC857 */
+    --accent-foreground: 238 54% 17%;
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 13% 85%;
-    --input: 220 13% 91%;
-    --ring: 141 73% 42%;
-    --radius: 0.75rem;
+
+    --success: 145 63% 42%;
+    --success-foreground: 0 0% 98%;
+    
+    --border: 228 30% 85%;
+    --input: 228 40% 92%;
+    --ring: 238 54% 37%;
+    
+    --radius: 1rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -34,6 +46,30 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  .dark {
+    --background: 238 54% 10%;
+    --foreground: 228 57% 94%;
+    --card: 238 54% 15%;
+    --card-foreground: 228 57% 94%;
+    --popover: 238 54% 10%;
+    --popover-foreground: 228 57% 94%;
+    --primary: 42 100% 67%;
+    --primary-foreground: 238 54% 17%;
+    --secondary: 238 54% 20%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 238 54% 20%;
+    --muted-foreground: 228 30% 75%;
+    --accent: 238 54% 20%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 145 63% 42%;
+    --success-foreground: 0 0% 98%;
+    --border: 238 54% 25%;
+    --input: 238 54% 25%;
+    --ring: 42 100% 67%;
+  }
 }
 
 @layer base {
@@ -42,5 +78,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image: radial-gradient(circle at 15% 15%, hsl(var(--primary) / 0.05), transparent 30%),
+                      radial-gradient(circle at 85% 85%, hsl(var(--accent) / 0.1), transparent 30%);
   }
 }

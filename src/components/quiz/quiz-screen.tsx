@@ -63,23 +63,23 @@ export default function QuizScreen({ question, onAnswer, onTimeout, score, quest
       return 'justify-start';
     }
     if (answer.text === selectedAnswer?.text) {
-      return answer.isCorrect ? 'bg-emerald-500/10 border-emerald-500 text-emerald-700 hover:bg-emerald-500/20 justify-between' : 'bg-red-500/10 border-red-500 text-red-700 hover:bg-red-500/20 justify-between';
+      return answer.isCorrect ? 'bg-success/10 border-success text-success-foreground hover:bg-success/20 justify-between' : 'bg-destructive/10 border-destructive text-destructive-foreground hover:bg-destructive/20 justify-between';
     }
     if (answer.isCorrect) {
-      return 'bg-emerald-500/10 border-emerald-500 text-emerald-700 justify-between';
+      return 'bg-success/10 border-success text-success-foreground justify-between';
     }
     return 'justify-start opacity-50';
   };
   
   const getIcon = (answer: Answer) => {
     if (!isAnswered) return null;
-    if (answer.isCorrect) return <CheckCircle className="h-5 w-5 text-emerald-500" />;
-    if (answer.text === selectedAnswer?.text && !answer.isCorrect) return <XCircle className="h-5 w-5 text-red-500" />;
+    if (answer.isCorrect) return <CheckCircle className="h-5 w-5 text-success" />;
+    if (answer.text === selectedAnswer?.text && !answer.isCorrect) return <XCircle className="h-5 w-5 text-destructive" />;
     return null;
   }
 
   return (
-    <Card className="w-full border">
+    <Card className="w-full bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
       <CardHeader>
         <div className="flex justify-between items-center mb-4">
           <p className="text-sm text-muted-foreground">Score: <span className="font-bold text-primary">{score}</span></p>
@@ -88,7 +88,7 @@ export default function QuizScreen({ question, onAnswer, onTimeout, score, quest
             <span>{timeLeft}s</span>
           </div>
         </div>
-        <Progress value={(questionNumber / totalQuestions) * 100} className="w-full" />
+        <Progress value={(questionNumber / totalQuestions) * 100} className="w-full h-2.5" />
         <CardTitle className="pt-6 text-center text-xl md:text-2xl">{question?.text}</CardTitle>
       </CardHeader>
       <CardContent>
