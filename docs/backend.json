@@ -49,7 +49,7 @@
     }
   },
   "auth": {
-    "providers": ["Google"]
+    "providers": ["Email/Password"]
   },
   "firestore": {
     "/scores/{scoreId}": {

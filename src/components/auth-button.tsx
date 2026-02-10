@@ -1,14 +1,9 @@
 'use client';
 
-import {
-  GoogleAuthProvider,
-  signInWithRedirect,
-  signOut,
-  type Auth,
-} from 'firebase/auth';
+import { signOut, type Auth } from 'firebase/auth';
 import { useAuth, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import { LogIn, LogOut } from 'lucide-react';
+import { LogOut, UserPlus, LogIn } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Link from 'next/link';
 
 function handleSignOut(auth: Auth) {
   signOut(auth);
@@ -24,11 +20,6 @@ function handleSignOut(auth: Auth) {
 export default function AuthButton() {
   const { user, loading } = useUser();
   const auth = useAuth();
-
-  const handleSignIn = () => {
-    const provider = new GoogleAuthProvider();
-    signInWithRedirect(auth, provider);
-  };
 
   if (loading) {
     return <Button variant="ghost" size="sm" disabled>Authenticating...</Button>;
@@ -58,8 +49,17 @@ export default function AuthButton() {
   }
 
   return (
-    <Button onClick={handleSignIn}>
-      <LogIn className="mr-2 h-4 w-4" /> Login with Google
-    </Button>
+    <div className="flex items-center gap-2">
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/login">
+            <LogIn className="mr-2 h-4 w-4" /> Log In
+          </Link>
+        </Button>
+        <Button asChild size="sm">
+            <Link href="/signup">
+                <UserPlus className="mr-2 h-4 w-4" /> Sign Up
+            </Link>
+        </Button>
+    </div>
   );
 }
