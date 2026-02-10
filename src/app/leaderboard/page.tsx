@@ -3,6 +3,7 @@ import LeaderboardTable from '@/components/leaderboard/leaderboard-table';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { CardFooter } from '@/components/ui/card';
+import AuthButton from '@/components/auth-button';
 
 export const metadata = {
   title: 'Leaderboard | FinQuiz Challenge',
@@ -20,6 +21,9 @@ export default function LeaderboardPage() {
           <BarChartHorizontal className="h-6 w-6" />
           <h1 className="text-lg font-semibold">FinQuiz Challenge</h1>
         </Link>
+      </div>
+      <div className="absolute top-4 right-4">
+        <AuthButton />
       </div>
       <div className="w-full max-w-4xl animate-in fade-in zoom-in-95 duration-500 mt-24">
         <LeaderboardTable />

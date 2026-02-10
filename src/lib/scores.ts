@@ -6,10 +6,11 @@ import { FirestorePermissionError } from '@/firebase/errors';
 export type Score = {
   playerName: string;
   score: number;
+  userId: string;
 };
 
 export const saveScore = (db: Firestore, scoreData: Score) => {
-  if (!scoreData.playerName || scoreData.score === undefined) {
+  if (!scoreData.playerName || scoreData.score === undefined || !scoreData.userId) {
     console.error("Attempted to save score with invalid data:", scoreData);
     return;
   }

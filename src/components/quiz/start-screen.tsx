@@ -1,32 +1,22 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
+import type { User } from 'firebase/auth';
 
 type StartScreenProps = {
-  onStart: (name: string) => void;
+  onStart: () => void;
+  user: User | null;
+  loading: boolean;
 };
 
-export default function StartScreen({ onStart }: StartScreenProps) {
-  const [name, setName] = useState('');
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const savedName = localStorage.getItem('finquiz-player-name');
-    if (savedName) {
-      setName(savedName);
-    }
-  }, []);
-
+export default function StartScreen({ onStart, user, loading }: StartScreenProps) {
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim()) {
-      onStart(name.trim());
-    } else {
-      setError('Please enter your name to start.');
+    if (user) {
+      onStart();
     }
   };
 
@@ -66,26 +56,27 @@ export default function StartScreen({ onStart }: StartScreenProps) {
                   </div>
               </div>
           </div>
-          <div>
-            <Input
-              id="username"
-              placeholder="Enter your name"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (error) setError('');
-              }}
-              aria-label="Enter your name"
-              className="text-center"
-            />
-            {error && <p className="text-sm text-destructive mt-2 text-center">{error}</p>}
-          </div>
+          {user && (
+            <div className="text-center text-lg">
+              Welcome, <span className="font-bold text-primary">{user.displayName}!</span>
+            </div>
+          )}
         </CardContent>
         <CardFooter>
-          <Button type="submit" className="w-full" size="lg">
-            Pay & Start Quiz
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
+          {loading ? (
+             <Button className="w-full" size="lg" disabled>
+              Loading...
+            </Button>
+          ) : user ? (
+            <Button type="submit" className="w-full" size="lg">
+              Pay & Start Quiz
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          ) : (
+            <div className="text-center w-full">
+              <p className="text-muted-foreground">Please log in to play.</p>
+            </div>
+          )}
         </CardFooter>
       </form>
     </Card>

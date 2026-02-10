@@ -2,9 +2,14 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
     match /scores/{scoreId} {
       allow read;
-      allow create: if request.resource.data.playerName != null && request.resource.data.playerName != '' && request.resource.data.score is number && request.resource.data.score >= 0;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
       allow update, delete: if false;
     }
   }

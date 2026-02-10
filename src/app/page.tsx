@@ -9,8 +9,9 @@ import ResultScreen from "@/components/quiz/result-screen";
 import type { Question, Answer } from "@/lib/questions";
 import { questions as allQuestions } from "@/lib/questions";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore } from "@/firebase";
+import { useFirestore, useUser } from "@/firebase";
 import { saveScore } from "@/lib/scores";
+import AuthButton from "@/components/auth-button";
 
 
 type GameState = "start" | "quiz" | "results";
@@ -25,12 +26,12 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>("start");
-  const [playerName, setPlayerName] = useState("");
   const [score, setScore] = useState(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   const { firestore } = useFirestore();
+  const { user, loading } = useUser();
   const { toast } = useToast();
 
   const setupGame = useCallback(() => {
@@ -47,10 +48,14 @@ export default function Home() {
   }, [setupGame]);
 
   useEffect(() => {
-    if (gameState === "results" && firestore && playerName) {
-      saveScore(firestore, { playerName, score });
+    if (gameState === "results" && firestore && user) {
+      saveScore(firestore, { 
+        playerName: user.displayName || "Anonymous", 
+        score,
+        userId: user.uid
+      });
     }
-  }, [gameState, firestore, playerName, score]);
+  }, [gameState, firestore, user, score]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -70,9 +75,15 @@ export default function Home() {
     };
   }, [gameState, toast]);
 
-  const handleStartGame = (name: string) => {
-    localStorage.setItem('finquiz-player-name', name);
-    setPlayerName(name);
+  const handleStartGame = () => {
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You must be logged in to start the quiz.",
+        variant: "destructive",
+      });
+      return;
+    }
     setScore(0);
     setCurrentQuestionIndex(0);
     setupGame(); // Re-shuffle questions for a new game
@@ -117,20 +128,23 @@ export default function Home() {
           />
         );
       case "results":
-        return <ResultScreen score={score} onRestart={handleRestart} playerName={playerName} />;
+        return <ResultScreen score={score} onRestart={handleRestart} playerName={user?.displayName || 'Player'} />;
       case "start":
       default:
-        return <StartScreen onStart={handleStartGame} />;
+        return <StartScreen onStart={handleStartGame} user={user} loading={loading} />;
     }
   };
 
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
       <div className="absolute top-0 z-[-2] h-screen w-screen bg-background bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(122,51,255,0.08),rgba(255,255,255,0))]"></div>
-       <div className="absolute top-6 left-6 flex items-center gap-2 text-foreground/80 transition-colors hover:text-foreground">
+       <div className="absolute top-6 left-6 flex items-center gap-2 text-foreground/80">
           <BarChartHorizontal className="h-6 w-6" />
           <h1 className="text-lg font-semibold">FinQuiz Challenge</h1>
        </div>
+      <div className="absolute top-4 right-4">
+        <AuthButton />
+      </div>
       <div className="w-full max-w-2xl animate-in fade-in zoom-in-95 duration-500">
         {renderGameState()}
       </div>
