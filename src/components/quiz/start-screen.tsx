@@ -2,23 +2,69 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, BarChart } from 'lucide-react';
 import type { User } from 'firebase/auth';
+import Link from 'next/link';
 
 type StartScreenProps = {
   onStart: () => void;
   user: User | null;
   loading: boolean;
+  hasPlayedThisWeek: boolean | null;
+  checkingForPastScore: boolean;
 };
 
-export default function StartScreen({ onStart, user, loading }: StartScreenProps) {
+export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek, checkingForPastScore }: StartScreenProps) {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (user) {
+    if (user && !hasPlayedThisWeek) {
       onStart();
     }
   };
+
+  const renderFooterContent = () => {
+    if (loading) {
+      return (
+        <Button className="w-full" size="lg" disabled>
+          Loading...
+        </Button>
+      );
+    }
+    if (checkingForPastScore) {
+      return (
+        <Button className="w-full" size="lg" disabled>
+          Checking your status...
+        </Button>
+      );
+    }
+    if (!user) {
+      return (
+        <div className="text-center w-full">
+          <p className="text-muted-foreground">Please log in to play.</p>
+        </div>
+      );
+    }
+    if (hasPlayedThisWeek) {
+      return (
+        <div className="w-full flex flex-col items-center gap-4">
+            <p className="text-center text-muted-foreground">You've already played this week! Come back on Monday for a new challenge.</p>
+            <Button asChild className="w-full" size="lg">
+                <Link href="/leaderboard">
+                    <BarChart className="mr-2 h-5 w-5" />
+                    View Leaderboard
+                </Link>
+            </Button>
+        </div>
+      );
+    }
+    return (
+       <Button type="submit" className="w-full" size="lg">
+          Pay & Start Quiz
+          <ArrowRight className="ml-2 h-5 w-5" />
+        </Button>
+    )
+  }
 
   return (
     <Card className="border">
@@ -63,20 +109,7 @@ export default function StartScreen({ onStart, user, loading }: StartScreenProps
           )}
         </CardContent>
         <CardFooter>
-          {loading ? (
-             <Button className="w-full" size="lg" disabled>
-              Loading...
-            </Button>
-          ) : user ? (
-            <Button type="submit" className="w-full" size="lg">
-              Pay & Start Quiz
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          ) : (
-            <div className="text-center w-full">
-              <p className="text-muted-foreground">Please log in to play.</p>
-            </div>
-          )}
+          {renderFooterContent()}
         </CardFooter>
       </form>
     </Card>

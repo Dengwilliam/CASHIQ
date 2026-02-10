@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { BarChartHorizontal } from "lucide-react";
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { startOfWeek, endOfWeek } from 'date-fns';
+
 
 import StartScreen from "@/components/quiz/start-screen";
 import QuizScreen from "@/components/quiz/quiz-screen";
@@ -29,6 +32,9 @@ export default function Home() {
   const [score, setScore] = useState(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [hasPlayedThisWeek, setHasPlayedThisWeek] = useState<boolean | null>(null);
+  const [checkingForPastScore, setCheckingForPastScore] = useState(true);
+
 
   const firestore = useFirestore();
   const { user, loading } = useUser();
@@ -54,8 +60,46 @@ export default function Home() {
         score,
         userId: user.uid
       });
+      // After saving the score, mark that the user has played this week
+      setHasPlayedThisWeek(true);
     }
   }, [gameState, firestore, user, score]);
+
+  useEffect(() => {
+    const checkUserScore = async () => {
+      if (!firestore || !user) {
+        setHasPlayedThisWeek(null);
+        setCheckingForPastScore(false);
+        return;
+      }
+      setCheckingForPastScore(true);
+
+      const today = new Date();
+      const start = startOfWeek(today, { weekStartsOn: 1 });
+      const end = endOfWeek(today, { weekStartsOn: 1 });
+
+      const scoresQuery = query(
+        collection(firestore, 'scores'),
+        where('userId', '==', user.uid),
+        where('createdAt', '>=', start),
+        where('createdAt', '<=', end),
+        limit(1)
+      );
+
+      try {
+        const querySnapshot = await getDocs(scoresQuery);
+        setHasPlayedThisWeek(!querySnapshot.empty);
+      } catch (error) {
+        console.error("Error checking for past score:", error);
+        setHasPlayedThisWeek(false); // Assume they can play if there's an error
+      } finally {
+        setCheckingForPastScore(false);
+      }
+    };
+
+    checkUserScore();
+  }, [user, firestore, gameState]);
+
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -80,6 +124,14 @@ export default function Home() {
       toast({
         title: "Please log in",
         description: "You must be logged in to start the quiz.",
+        variant: "destructive",
+      });
+      return;
+    }
+     if (hasPlayedThisWeek) {
+      toast({
+        title: "Already Played",
+        description: "You can only play the quiz once per week. Check the leaderboard!",
         variant: "destructive",
       });
       return;
@@ -112,6 +164,8 @@ export default function Home() {
 
   const handleRestart = () => {
     setGameState("start");
+    // We go back to start, and the useEffect will re-check if they can play.
+    // Since they just finished, hasPlayedThisWeek will become true.
   };
 
   const renderGameState = () => {
@@ -131,7 +185,7 @@ export default function Home() {
         return <ResultScreen score={score} onRestart={handleRestart} playerName={user?.displayName || 'Player'} />;
       case "start":
       default:
-        return <StartScreen onStart={handleStartGame} user={user} loading={loading} />;
+        return <StartScreen onStart={handleStartGame} user={user} loading={loading} hasPlayedThisWeek={hasPlayedThisWeek} checkingForPastScore={checkingForPastScore} />;
     }
   };
 
