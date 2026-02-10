@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { collection, query, orderBy, limit, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { useState, useEffect, useMemo } from 'react';
+import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { startOfWeek, endOfWeek, format } from 'date-fns';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -56,17 +56,28 @@ export default function LeaderboardTable() {
 
   const scoresQuery = useMemoFirebase(() => {
     if (!firestore || !week) return null;
+    // Query is simplified to avoid composite index. Sorting and limiting is done client-side.
     return query(
         collection(firestore, 'scores'), 
         where('createdAt', '>=', week.start),
-        where('createdAt', '<=', week.end),
-        orderBy('score', 'desc'),
-        orderBy('createdAt', 'asc'),
-        limit(10)
+        where('createdAt', '<=', week.end)
     );
   }, [firestore, week]);
 
-  const { data: scores, loading, error } = useCollection<ScoreEntry>(scoresQuery);
+  const { data: allScores, loading, error } = useCollection<ScoreEntry>(scoresQuery);
+  
+  const scores = useMemo(() => {
+    if (!allScores) return null;
+    return [...allScores]
+      .sort((a, b) => {
+        if (a.score !== b.score) {
+          return b.score - a.score; // Higher score first
+        }
+        // Tie-breaker: earlier time first
+        return a.createdAt.toMillis() - b.createdAt.toMillis();
+      })
+      .slice(0, 10);
+  }, [allScores]);
 
   useEffect(() => {
     if (!firestore || !week) return;

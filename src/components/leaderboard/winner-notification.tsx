@@ -3,13 +3,14 @@
 import { useEffect } from 'react';
 import { useFirestore, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, type Timestamp } from 'firebase/firestore';
 import { subWeeks, startOfWeek, endOfWeek, isMonday } from 'date-fns';
 
 type ScoreWinner = {
   userId: string;
   playerName: string;
   score: number;
+  createdAt: Timestamp;
 };
 
 // Helper function for rank suffix
@@ -59,34 +60,39 @@ export default function WinnerNotification() {
       const scoresQuery = query(
         collection(firestore, 'scores'),
         where('createdAt', '>=', startOfLastWeek),
-        where('createdAt', '<=', endOfLastWeek),
-        orderBy('score', 'desc'),
-        orderBy('createdAt', 'asc'),
-        limit(4)
+        where('createdAt', '<=', endOfLastWeek)
       );
 
       try {
         const querySnapshot = await getDocs(scoresQuery);
-        const winners: ScoreWinner[] = [];
+        const scores: ScoreWinner[] = [];
         querySnapshot.forEach((doc) => {
-          winners.push(doc.data() as ScoreWinner);
+          scores.push(doc.data() as ScoreWinner);
         });
         
-        // 3. Check if current user is a winner
+        // 3. Sort client-side to find winners
+        const winners = scores.sort((a, b) => {
+          if (a.score !== b.score) {
+            return b.score - a.score;
+          }
+          return a.createdAt.toMillis() - b.createdAt.toMillis();
+        }).slice(0, 4);
+        
+        // 4. Check if current user is a winner
         const winnerIndex = winners.findIndex(winner => winner.userId === user.uid);
 
         if (winnerIndex !== -1) {
           const currentUserWinner = winners[winnerIndex];
           const rank = winnerIndex + 1;
 
-          // 4. Show toast notification
+          // 5. Show toast notification
           toast({
             title: 'Congratulations! You\'re a Winner!',
             description: `You ranked ${rank}${getRankSuffix(rank)} on last week\'s leaderboard with a score of ${currentUserWinner.score}. Your prize has been credited.`,
             duration: 10000,
           });
 
-          // 5. Mark notification as shown
+          // 6. Mark notification as shown
           localStorage.setItem(winnerNotificationKey, 'true');
         }
       } catch (error) {
