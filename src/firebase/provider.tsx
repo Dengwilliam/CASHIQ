@@ -51,5 +51,5 @@ export const useFirebase = () => {
 };
 
 export const useFirebaseApp = () => useFirebase().app;
-export const useFirestore = () => useFirebase();
+export const useFirestore = () => useFirebase().firestore;
 export const useAuth = () => useFirebase().auth;

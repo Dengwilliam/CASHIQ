@@ -30,7 +30,7 @@ export default function Home() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
   const { user, loading } = useUser();
   const { toast } = useToast();
 

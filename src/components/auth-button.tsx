@@ -55,7 +55,7 @@ function handleSignOut(auth: any) {
 export default function AuthButton() {
   const { user, loading } = useUser();
   const auth = useAuth();
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
 
   if (loading) {
     return <Button variant="ghost" size="sm" disabled>Authenticating...</Button>;

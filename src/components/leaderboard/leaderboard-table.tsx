@@ -44,7 +44,7 @@ function LeaderboardSkeleton() {
 }
 
 export default function LeaderboardTable() {
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
   const [totalEntries, setTotalEntries] = useState(0);
 
   const scoresQuery = useMemoFirebase(() => {
