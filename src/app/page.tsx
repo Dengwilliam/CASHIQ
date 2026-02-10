@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { BarChartHorizontal } from "lucide-react";
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, type Timestamp } from 'firebase/firestore';
 import { startOfWeek, endOfWeek } from 'date-fns';
 
 
@@ -80,15 +80,21 @@ export default function Home() {
 
       const scoresQuery = query(
         collection(firestore, 'scores'),
-        where('userId', '==', user.uid),
-        where('createdAt', '>=', start),
-        where('createdAt', '<=', end),
-        limit(1)
+        where('userId', '==', user.uid)
       );
 
       try {
         const querySnapshot = await getDocs(scoresQuery);
-        setHasPlayedThisWeek(!querySnapshot.empty);
+        const scoresThisWeek = querySnapshot.docs.filter(doc => {
+            const scoreData = doc.data();
+            // serverTimestamp is null until the server acknowledges the write, so we check.
+            if (scoreData.createdAt) {
+                const scoreDate = (scoreData.createdAt as Timestamp).toDate();
+                return scoreDate >= start && scoreDate <= end;
+            }
+            return false;
+        });
+        setHasPlayedThisWeek(scoresThisWeek.length > 0);
       } catch (error) {
         console.error("Error checking for past score:", error);
         setHasPlayedThisWeek(false); // Assume they can play if there's an error
