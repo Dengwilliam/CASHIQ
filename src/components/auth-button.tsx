@@ -23,29 +23,25 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 async function handleSignIn(auth: Auth, firestore: Firestore) {
   const provider = new GoogleAuthProvider();
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    // Create or update user profile in Firestore
-    if (user) {
-      const userRef = doc(firestore, 'users', user.uid);
-      const userData = {
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-      };
-      setDoc(userRef, userData, { merge: true })
-        .catch((serverError) => {
-            const permissionError = new FirestorePermissionError({
-                path: userRef.path,
-                operation: 'update',
-                requestResourceData: userData,
-            });
-            errorEmitter.emit('permission-error', permissionError);
-        });
-    }
-  } catch (error) {
-    console.error('Error during sign-in:', error);
+  const result = await signInWithPopup(auth, provider);
+  const user = result.user;
+  // Create or update user profile in Firestore
+  if (user) {
+    const userRef = doc(firestore, 'users', user.uid);
+    const userData = {
+      displayName: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL,
+    };
+    setDoc(userRef, userData, { merge: true })
+      .catch((serverError) => {
+          const permissionError = new FirestorePermissionError({
+              path: userRef.path,
+              operation: 'update',
+              requestResourceData: userData,
+          });
+          errorEmitter.emit('permission-error', permissionError);
+      });
   }
 }
 
@@ -86,7 +82,7 @@ export default function AuthButton() {
   }
 
   return (
-    <Button onClick={() => handleSignIn(auth, firestore)}>
+    <Button onClick={async () => await handleSignIn(auth, firestore)}>
       <LogIn className="mr-2 h-4 w-4" /> Login with Google
     </Button>
   );
