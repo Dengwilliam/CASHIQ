@@ -26,7 +26,7 @@ export default function ResultScreen({ score, onRestart, playerName }: ResultScr
         </div>
         <CardTitle className="text-3xl font-bold">Quiz Finished!</CardTitle>
         <CardDescription className="pt-2">
-          Well done, {playerName}! Here's how you did.
+          Well done, {playerName}! Your score will be submitted to the weekly leaderboard.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -8,15 +8,12 @@ import QuizScreen from "@/components/quiz/quiz-screen";
 import ResultScreen from "@/components/quiz/result-screen";
 import type { Question, Answer } from "@/lib/questions";
 import { questions as allQuestions } from "@/lib/questions";
-import { adjustQuizDifficulty } from "@/ai/flows/adaptive-quiz-difficulty";
 import { useToast } from "@/hooks/use-toast";
 
 type GameState = "start" | "quiz" | "results";
-type Difficulty = "easy" | "medium" | "hard";
 
 const QUESTIONS_PER_GAME = 10;
 const TAB_SWITCH_PENALTY = 5;
-const PERFORMANCE_CHECK_INTERVAL = 3;
 
 // Utility to shuffle an array
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -30,12 +27,10 @@ export default function Home() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
-  const [recentPerformance, setRecentPerformance] = useState<boolean[]>([]);
   const { toast } = useToast();
 
   const setupGame = useCallback(() => {
-    const shuffledQuestions = shuffleArray(allQuestions.filter(q => q.difficulty === 'medium')).slice(0, QUESTIONS_PER_GAME);
+    const shuffledQuestions = shuffleArray(allQuestions).slice(0, QUESTIONS_PER_GAME);
     const questionsWithShuffledAnswers = shuffledQuestions.map(q => ({
       ...q,
       answers: shuffleArray(q.answers)
@@ -70,8 +65,6 @@ export default function Home() {
     setPlayerName(name);
     setScore(0);
     setCurrentQuestionIndex(0);
-    setDifficulty("medium");
-    setRecentPerformance([]);
     setupGame(); // Re-shuffle questions for a new game
     setGameState("quiz");
   };
@@ -80,49 +73,6 @@ export default function Home() {
     const isCorrect = answer.isCorrect;
     if (isCorrect) {
       setScore((prev) => prev + 10);
-    }
-    
-    const updatedPerformance = [...recentPerformance, isCorrect];
-    setRecentPerformance(updatedPerformance);
-
-    if (updatedPerformance.length >= PERFORMANCE_CHECK_INTERVAL) {
-      try {
-        const result = await adjustQuizDifficulty({ recentPerformance: updatedPerformance });
-        let newDifficulty = difficulty;
-        if (result.difficultyAdjustment === 'increase' && difficulty !== 'hard') {
-            newDifficulty = difficulty === 'easy' ? 'medium' : 'hard';
-        } else if (result.difficultyAdjustment === 'decrease' && difficulty !== 'easy') {
-            newDifficulty = difficulty === 'hard' ? 'medium' : 'easy';
-        }
-        
-        if (newDifficulty !== difficulty) {
-            setDifficulty(newDifficulty);
-             toast({
-                title: "Difficulty Adjusted",
-                description: `Difficulty is now ${newDifficulty}.`,
-            });
-
-            const remainingQuestionsCount = questions.length - (currentQuestionIndex + 1);
-            if (remainingQuestionsCount > 0) {
-              const newDifficultyQuestions = allQuestions.filter(q => q.difficulty === newDifficulty);
-              const currentQuestionIds = new Set(questions.map(q => q.id));
-              const freshQuestions = shuffleArray(newDifficultyQuestions.filter(q => !currentQuestionIds.has(q.id)));
-              
-              const nextQuestions = freshQuestions.slice(0, remainingQuestionsCount).map(q => ({
-                ...q,
-                answers: shuffleArray(q.answers)
-              }));
-
-              if (nextQuestions.length > 0) {
-                const updatedQuestions = [...questions.slice(0, currentQuestionIndex + 1), ...nextQuestions];
-                setQuestions(updatedQuestions);
-              }
-            }
-        }
-      } catch (error) {
-        console.error("AI difficulty adjustment failed:", error);
-      }
-      setRecentPerformance([]); // Reset after check
     }
 
     setTimeout(() => {
@@ -154,7 +104,6 @@ export default function Home() {
             score={score}
             questionNumber={currentQuestionIndex + 1}
             totalQuestions={questions.length}
-            difficulty={difficulty}
           />
         );
       case "results":

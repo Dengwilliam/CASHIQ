@@ -34,13 +34,37 @@ export default function StartScreen({ onStart }: StartScreenProps) {
     <Card>
       <CardHeader className="text-center">
         <CardTitle className="text-3xl font-bold text-primary">Financial Quiz Challenge</CardTitle>
-        <CardDescription className="pt-2">Test your knowledge and win big!</CardDescription>
+        <CardDescription className="pt-2">Test your knowledge and compete for weekly prizes!</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="text-center p-4 bg-secondary/50 rounded-lg">
             <p className="text-sm text-muted-foreground">Entry Fee</p>
             <p className="text-2xl font-bold text-primary">25,000 SSP</p>
+          </div>
+           <div className="text-center p-4 border border-dashed border-accent rounded-lg">
+              <h3 className="text-lg font-semibold text-primary">Weekly Competition!</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                  Top 4 players win a share of the total weekly entry fees!
+              </p>
+              <div className="grid grid-cols-4 gap-2 mt-3 text-center">
+                  <div>
+                      <p className="font-bold text-lg text-accent">30%</p>
+                      <p className="text-xs text-muted-foreground">1st Place</p>
+                  </div>
+                  <div>
+                      <p className="font-bold text-lg text-accent">20%</p>
+                      <p className="text-xs text-muted-foreground">2nd Place</p>
+                  </div>
+                  <div>
+                      <p className="font-bold text-lg text-accent">10%</p>
+                      <p className="text-xs text-muted-foreground">3rd Place</p>
+                  </div>
+                  <div>
+                      <p className="font-bold text-lg text-accent">5%</p>
+                      <p className="text-xs text-muted-foreground">4th Place</p>
+                  </div>
+              </div>
           </div>
           <div>
             <Input
