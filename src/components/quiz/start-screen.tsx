@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,13 @@ type StartScreenProps = {
 export default function StartScreen({ onStart }: StartScreenProps) {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const savedName = localStorage.getItem('finquiz-player-name');
+    if (savedName) {
+      setName(savedName);
+    }
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

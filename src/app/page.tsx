@@ -35,7 +35,7 @@ export default function Home() {
   const { toast } = useToast();
 
   const setupGame = useCallback(() => {
-    const shuffledQuestions = shuffleArray(allQuestions).slice(0, QUESTIONS_PER_GAME);
+    const shuffledQuestions = shuffleArray(allQuestions.filter(q => q.difficulty === 'medium')).slice(0, QUESTIONS_PER_GAME);
     const questionsWithShuffledAnswers = shuffledQuestions.map(q => ({
       ...q,
       answers: shuffleArray(q.answers)
@@ -66,6 +66,7 @@ export default function Home() {
   }, [gameState, toast]);
 
   const handleStartGame = (name: string) => {
+    localStorage.setItem('finquiz-player-name', name);
     setPlayerName(name);
     setScore(0);
     setCurrentQuestionIndex(0);
@@ -100,6 +101,23 @@ export default function Home() {
                 title: "Difficulty Adjusted",
                 description: `Difficulty is now ${newDifficulty}.`,
             });
+
+            const remainingQuestionsCount = questions.length - (currentQuestionIndex + 1);
+            if (remainingQuestionsCount > 0) {
+              const newDifficultyQuestions = allQuestions.filter(q => q.difficulty === newDifficulty);
+              const currentQuestionIds = new Set(questions.map(q => q.id));
+              const freshQuestions = shuffleArray(newDifficultyQuestions.filter(q => !currentQuestionIds.has(q.id)));
+              
+              const nextQuestions = freshQuestions.slice(0, remainingQuestionsCount).map(q => ({
+                ...q,
+                answers: shuffleArray(q.answers)
+              }));
+
+              if (nextQuestions.length > 0) {
+                const updatedQuestions = [...questions.slice(0, currentQuestionIndex + 1), ...nextQuestions];
+                setQuestions(updatedQuestions);
+              }
+            }
         }
       } catch (error) {
         console.error("AI difficulty adjustment failed:", error);
@@ -136,6 +154,7 @@ export default function Home() {
             score={score}
             questionNumber={currentQuestionIndex + 1}
             totalQuestions={questions.length}
+            difficulty={difficulty}
           />
         );
       case "results":

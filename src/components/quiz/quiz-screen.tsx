@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import type { Question, Answer } from '@/lib/questions';
 import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 type QuizScreenProps = {
   question: Question;
@@ -15,11 +16,12 @@ type QuizScreenProps = {
   score: number;
   questionNumber: number;
   totalQuestions: number;
+  difficulty: 'easy' | 'medium' | 'hard';
 };
 
 const TIME_PER_QUESTION = 15;
 
-export default function QuizScreen({ question, onAnswer, onTimeout, score, questionNumber, totalQuestions }: QuizScreenProps) {
+export default function QuizScreen({ question, onAnswer, onTimeout, score, questionNumber, totalQuestions, difficulty }: QuizScreenProps) {
   const [timeLeft, setTimeLeft] = useState(TIME_PER_QUESTION);
   const [selectedAnswer, setSelectedAnswer] = useState<Answer | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -83,6 +85,7 @@ export default function QuizScreen({ question, onAnswer, onTimeout, score, quest
       <CardHeader>
         <div className="flex justify-between items-center mb-4">
           <p className="text-sm text-muted-foreground">Score: <span className="font-bold text-primary">{score}</span></p>
+          <Badge variant={ difficulty === 'hard' ? 'destructive' : difficulty === 'easy' ? 'secondary' : 'default'} className="capitalize">{difficulty}</Badge>
            <div className="flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-sm font-medium text-primary">
             <Clock className="h-4 w-4" />
             <span>{timeLeft}s</span>
