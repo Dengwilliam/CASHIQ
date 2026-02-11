@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { collection, query, where, orderBy, addDoc, serverTimestamp, type Timestamp } from 'firebase/firestore';
+import { collection, query, where, addDoc, serverTimestamp, type Timestamp } from 'firebase/firestore';
 import { Badge, FileText, Send, Landmark } from 'lucide-react';
 
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
@@ -78,12 +78,21 @@ export default function WalletPage() {
         if (!firestore || !user) return null;
         return query(
             collection(firestore, 'payment-transactions'),
-            where('userId', '==', user.uid),
-            orderBy('createdAt', 'desc')
+            where('userId', '==', user.uid)
         );
     }, [firestore, user]);
 
     const { data: transactions, loading: transactionsLoading } = useCollection<PaymentTransaction>(transactionsQuery);
+
+    const sortedTransactions = useMemo(() => {
+        if (!transactions) return [];
+        return [...transactions].sort((a, b) => {
+            if (a.createdAt && b.createdAt) {
+                return b.createdAt.toMillis() - a.createdAt.toMillis();
+            }
+            return 0;
+        });
+    }, [transactions]);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         if (!firestore || !user) {
@@ -210,7 +219,7 @@ export default function WalletPage() {
                     <CardContent>
                        {transactionsLoading ? (
                            <HistorySkeleton />
-                       ) : transactions && transactions.length > 0 ? (
+                       ) : sortedTransactions && sortedTransactions.length > 0 ? (
                            <Table>
                                <TableHeader>
                                    <TableRow>
@@ -221,10 +230,10 @@ export default function WalletPage() {
                                    </TableRow>
                                </TableHeader>
                                <TableBody>
-                                   {transactions.map(tx => (
+                                   {sortedTransactions.map(tx => (
                                        <TableRow key={tx.id}>
                                            <TableCell className="font-mono text-xs">{tx.momoTransactionId}</TableCell>
-                                           <TableCell>{format(tx.createdAt.toDate(), 'PPP p')}</TableCell>
+                                           <TableCell>{tx.createdAt ? format(tx.createdAt.toDate(), 'PPP p') : 'Processing...'}</TableCell>
                                            <TableCell className="font-semibold">{tx.amount.toLocaleString()} SSP</TableCell>
                                            <TableCell className="text-right">{getStatusBadge(tx.status)}</TableCell>
                                        </TableRow>
