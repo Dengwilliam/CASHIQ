@@ -1,18 +1,20 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, type Timestamp } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { startOfWeek, endOfWeek, format } from 'date-fns';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 type ScoreEntry = {
   id: string;
   playerName: string;
   score: number;
   createdAt: Timestamp;
+  userId: string;
 };
 
 const prizeDistribution: { [key: number]: number } = {
@@ -40,7 +42,7 @@ function LeaderboardSkeleton() {
 
 export default function LeaderboardTable() {
   const firestore = useFirestore();
-  const [totalEntries, setTotalEntries] = useState(0);
+  const { user } = useUser();
   const [week, setWeek] = useState<{ start: Date; end: Date } | null>(null);
 
   useEffect(() => {
@@ -63,9 +65,10 @@ export default function LeaderboardTable() {
 
   const { data: allScores, loading, error } = useCollection<ScoreEntry>(scoresQuery);
   
-  const scores = useMemo(() => {
-    if (!allScores) return null;
-    return [...allScores]
+  const { topScores, currentUserRank, isUserInTop10 } = useMemo(() => {
+    if (!allScores) return { topScores: [], currentUserRank: null, isUserInTop10: false };
+
+    const rankedScores = [...allScores]
       .sort((a, b) => {
         if (a.score !== b.score) {
           return b.score - a.score; // Higher score first
@@ -73,21 +76,20 @@ export default function LeaderboardTable() {
         // Tie-breaker: earlier time first
         return a.createdAt.toMillis() - b.createdAt.toMillis();
       })
-      .slice(0, 10);
-  }, [allScores]);
-
-  useEffect(() => {
-    if (!firestore || !week) return;
+      .map((score, index) => ({ ...score, rank: index + 1 }));
     
-    const scoresCol = collection(firestore, 'scores');
-    const q = query(scoresCol, where('createdAt', '>=', week.start), where('createdAt', '<=', week.end));
+    const topScores = rankedScores.slice(0, 10);
 
-    const unsubscribe = onSnapshot(q, snapshot => {
-        setTotalEntries(snapshot.size);
-    });
+    let currentUserRankData = null;
+    if (user) {
+        currentUserRankData = rankedScores.find(score => score.userId === user.uid) || null;
+    }
 
-    return () => unsubscribe();
-  }, [firestore, week]);
+    const isUserInTop10 = !!(currentUserRankData && currentUserRankData.rank <= 10);
+
+    return { topScores, currentUserRank: currentUserRankData, isUserInTop10 };
+  }, [allScores, user]);
+
 
   const getPrizePercentage = (rank: number) => {
     const percentage = prizeDistribution[rank];
@@ -123,7 +125,7 @@ export default function LeaderboardTable() {
             </p>
           </div>
         )}
-        {scores && !loading && (
+        {topScores && !loading && (
           <Table>
             <TableHeader>
               <TableRow>
@@ -133,8 +135,14 @@ export default function LeaderboardTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {scores.map((score, index) => (
-                <TableRow key={score.id} className={index < 4 ? 'font-bold' : ''}>
+              {topScores.map((score, index) => (
+                <TableRow 
+                  key={score.id} 
+                  className={cn(
+                    index < 4 ? 'font-bold' : '',
+                    user && score.userId === user.uid && 'bg-primary/10'
+                  )}
+                >
                   <TableCell>
                     <div className="flex items-center justify-center">
                       {getRankIcon(index + 1)}
@@ -148,6 +156,29 @@ export default function LeaderboardTable() {
           </Table>
         )}
       </CardContent>
+       {currentUserRank && !isUserInTop10 && (
+        <>
+            <div className="px-6 pb-4">
+                <div className="border-t border-dashed border-border"></div>
+            </div>
+            <CardFooter className="flex-col items-start bg-primary/5 p-4 mx-6 mb-6 rounded-lg border border-primary/20">
+                <p className="text-sm font-semibold mb-2 text-primary">Your Current Rank</p>
+                <Table>
+                    <TableBody>
+                        <TableRow className="border-none hover:bg-transparent">
+                             <TableCell className="w-[80px] p-0">
+                                <div className="flex items-center justify-center">
+                                    {getRankIcon(currentUserRank.rank)}
+                                </div>
+                            </TableCell>
+                            <TableCell className="p-0 font-bold">{currentUserRank.playerName}</TableCell>
+                            <TableCell className="text-right p-0 font-semibold text-primary">{getPrizePercentage(currentUserRank.rank)}</TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </CardFooter>
+        </>
+      )}
     </Card>
   );
 }
