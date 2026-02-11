@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { collection, query, where, addDoc, serverTimestamp, type Timestamp } from 'firebase/firestore';
+import { collection, query, addDoc, serverTimestamp, type Timestamp } from 'firebase/firestore';
 import { Badge, FileText, Send, Landmark, Image as ImageIcon } from 'lucide-react';
 
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
@@ -102,8 +102,7 @@ export default function WalletPage() {
     const transactionsQuery = useMemoFirebase(() => {
         if (!firestore || !user) return null;
         return query(
-            collection(firestore, 'payment-transactions'),
-            where('userId', '==', user.uid)
+            collection(firestore, 'users', user.uid, 'payment-transactions')
         );
     }, [firestore, user]);
 
@@ -158,7 +157,7 @@ export default function WalletPage() {
             screenshotUrl: screenshotUrl,
         };
 
-        const collectionRef = collection(firestore, 'payment-transactions');
+        const collectionRef = collection(firestore, 'users', user.uid, 'payment-transactions');
         
         addDoc(collectionRef, { ...transactionData, createdAt: serverTimestamp() })
             .then(() => {

@@ -3,7 +3,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Admin collection: Manually managed in Firebase Console.
-    // Client-side can only read to check for admin status. No writes allowed from client.
     match /admins/{userId} {
       allow get: if request.auth != null && request.auth.uid == userId;
       allow list, write: if false;
@@ -13,6 +12,14 @@ service cloud.firestore {
       allow get: if request.auth != null;
       allow list: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
       allow write: if request.auth != null && request.auth.uid == userId;
+
+      match /payment-transactions/{transactionId} {
+        allow list: if request.auth.uid == userId;
+        allow get: if request.auth.uid == userId || exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+        allow create: if request.auth.uid == userId && request.resource.data.userId == userId;
+        allow update: if exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+        allow delete: if false;
+      }
     }
 
     match /scores/{scoreId} {
@@ -20,17 +27,10 @@ service cloud.firestore {
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
       allow update, delete: if false;
     }
-
-    match /payment-transactions/{transactionId} {
-      // Admins can read all transactions, users can only read their own.
-      allow get: if request.auth != null && (resource.data.userId == request.auth.uid || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
-      // Admins can list all transactions.
+    
+    // This allows an admin to query the 'payment-transactions' collection group
+    match /{path=**}/payment-transactions/{transactionId} {
       allow list: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-      // Users can create their own transactions.
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      // Only admins can update (approve/reject) transactions.
-      allow update: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-      allow delete: if false;
     }
   }
 }

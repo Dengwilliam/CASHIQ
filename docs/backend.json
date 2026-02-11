@@ -145,11 +145,11 @@
       },
       "description": "Stores user profile information."
     },
-    "/payment-transactions/{transactionId}": {
+    "/users/{userId}/payment-transactions/{transactionId}": {
       "schema": {
         "$ref": "#/backend/entities/paymentTransaction"
       },
-      "description": "Stores user-submitted payment transactions."
+      "description": "Stores user-submitted payment transactions for a specific user."
     }
   }
 }

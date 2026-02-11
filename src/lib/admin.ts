@@ -6,10 +6,11 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 export const updateTransactionStatus = async (
   db: Firestore,
+  userId: string,
   transactionId: string,
   status: 'approved' | 'rejected'
 ) => {
-  const transactionRef = doc(db, 'payment-transactions', transactionId);
+  const transactionRef = doc(db, 'users', userId, 'payment-transactions', transactionId);
   const dataToUpdate = { status };
 
   try {

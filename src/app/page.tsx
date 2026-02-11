@@ -266,15 +266,15 @@ export default function Home() {
         const end = endOfWeek(today, { weekStartsOn: 1 });
 
         const paymentsQuery = query(
-            collection(firestore, 'payment-transactions'),
-            where('userId', '==', user.uid)
+            collection(firestore, 'users', user.uid, 'payment-transactions'),
+            where('status', '==', 'approved')
         );
 
         try {
             const querySnapshot = await getDocs(paymentsQuery);
             const approvedPaymentsThisWeek = querySnapshot.docs.filter(doc => {
                 const paymentData = doc.data();
-                if (paymentData.createdAt && paymentData.status === 'approved') {
+                if (paymentData.createdAt) {
                     const paymentDate = (paymentData.createdAt as Timestamp).toDate();
                     return paymentDate >= start && paymentDate <= end;
                 }

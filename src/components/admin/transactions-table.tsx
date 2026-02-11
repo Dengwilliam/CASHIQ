@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collectionGroup, query, orderBy } from 'firebase/firestore';
 import type { Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +26,7 @@ type PaymentTransaction = {
     status: 'pending' | 'approved' | 'rejected';
     createdAt: Timestamp;
     screenshotUrl?: string;
+    userId: string;
 };
 
 const getStatusBadge = (status: 'pending' | 'approved' | 'rejected') => {
@@ -63,7 +64,7 @@ export default function TransactionsTable() {
 
     const transactionsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return query(collection(firestore, 'payment-transactions'), orderBy('createdAt', 'desc'));
+        return query(collectionGroup(firestore, 'payment-transactions'), orderBy('createdAt', 'desc'));
     }, [firestore]);
 
     const { data: transactions, loading, error } = useCollection<PaymentTransaction>(transactionsQuery);
@@ -76,11 +77,11 @@ export default function TransactionsTable() {
         };
     }, [transactions]);
 
-    const handleUpdateStatus = async (transactionId: string, status: 'approved' | 'rejected') => {
+    const handleUpdateStatus = async (userId: string, transactionId: string, status: 'approved' | 'rejected') => {
         if (!firestore) return;
         setUpdatingId(transactionId);
         try {
-            await updateTransactionStatus(firestore, transactionId, status);
+            await updateTransactionStatus(firestore, userId, transactionId, status);
             toast({
                 title: 'Success',
                 description: `Transaction has been ${status}.`,
@@ -155,7 +156,7 @@ export default function TransactionsTable() {
                                     size="icon"
                                     variant="outline"
                                     className="h-8 w-8 text-success-foreground border-success hover:bg-success/20"
-                                    onClick={() => handleUpdateStatus(tx.id, 'approved')}
+                                    onClick={() => handleUpdateStatus(tx.userId, tx.id, 'approved')}
                                     disabled={updatingId === tx.id}
                                 >
                                     <Check className="h-4 w-4" />
@@ -164,7 +165,7 @@ export default function TransactionsTable() {
                                     size="icon"
                                     variant="outline"
                                     className="h-8 w-8 text-destructive-foreground border-destructive hover:bg-destructive/20"
-                                    onClick={() => handleUpdateStatus(tx.id, 'rejected')}
+                                    onClick={() => handleUpdateStatus(tx.userId, tx.id, 'rejected')}
                                     disabled={updatingId === tx.id}
                                 >
                                     <X className="h-4 w-4" />
