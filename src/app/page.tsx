@@ -13,8 +13,7 @@ import { questions as allQuestions } from "@/lib/questions";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useUser } from "@/firebase";
 import { saveScore } from "@/lib/scores";
-import AuthButton from "@/components/auth-button";
-import { Trophy } from "lucide-react";
+import SiteHeader from "@/components/site-header";
 
 
 type GameState = "start" | "quiz" | "results";
@@ -211,13 +210,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
-       <div className="absolute top-6 left-6 flex items-center gap-2 text-foreground">
-          <Trophy className="h-8 w-8 text-accent" />
-          <h1 className="text-2xl font-black">FinQuiz Challenge</h1>
-       </div>
-      <div className="absolute top-4 right-4">
-        <AuthButton />
-      </div>
+      <SiteHeader />
       <div className="w-full max-w-2xl animate-in fade-in zoom-in-95 duration-500">
         {renderGameState()}
       </div>

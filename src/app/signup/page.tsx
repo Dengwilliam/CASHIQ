@@ -23,7 +23,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { Trophy } from 'lucide-react';
+import SiteHeader from '@/components/site-header';
 
 const formSchema = z.object({
   displayName: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -96,12 +96,7 @@ export default function SignUpPage() {
 
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
-        <div className="absolute top-6 left-6 flex items-center gap-2 text-foreground">
-            <Link href="/" className="flex items-center gap-2">
-                <Trophy className="h-8 w-8 text-accent" />
-                <h1 className="text-2xl font-black">FinQuiz Challenge</h1>
-            </Link>
-         </div>
+      <SiteHeader />
       <Card className="w-full max-w-sm bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
         <CardHeader>
           <CardTitle>Create an Account</CardTitle>
