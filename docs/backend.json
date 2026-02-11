@@ -84,6 +84,11 @@
           "type": "string",
           "format": "date-time",
           "description": "The timestamp of when the payment proof was submitted."
+        },
+        "screenshotUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Data URI of the uploaded screenshot for payment proof."
         }
       },
       "required": ["userId", "momoTransactionId", "amount", "status", "createdAt"]

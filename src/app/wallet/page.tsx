@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { collection, query, where, addDoc, serverTimestamp, type Timestamp } from 'firebase/firestore';
-import { Badge, FileText, Send, Landmark } from 'lucide-react';
+import { Badge, FileText, Send, Landmark, Image as ImageIcon } from 'lucide-react';
 
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -22,9 +22,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge as UiBadge } from '@/components/ui/badge';
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const formSchema = z.object({
   transactionId: z.string().min(5, { message: 'Transaction ID must be at least 5 characters long.' }),
+  screenshot: z
+    .any()
+    .refine((files) => files?.length === 1, "Screenshot is required.")
+    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine(
+      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+      ".jpg, .jpeg, .png and .webp files are accepted."
+    ),
 });
 
 type PaymentTransaction = {
@@ -33,19 +43,33 @@ type PaymentTransaction = {
     amount: number;
     status: 'pending' | 'approved' | 'rejected';
     createdAt: Timestamp;
+    screenshotUrl?: string;
 }
 
 function HistorySkeleton() {
     return (
-        <div className="space-y-2">
-            {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex items-center justify-between p-2 bg-secondary/30 rounded-md">
-                    <Skeleton className="h-5 w-1/3" />
-                    <Skeleton className="h-5 w-1/4" />
-                    <Skeleton className="h-5 w-1/4" />
-                </div>
-            ))}
-        </div>
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Transaction ID</TableHead>
+                    <TableHead>Screenshot</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead className="text-right">Status</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {[...Array(3)].map((_, i) => (
+                    <TableRow key={i}>
+                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-12" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-5 w-16" /></TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
     );
 }
 
@@ -71,6 +95,7 @@ export default function WalletPage() {
         resolver: zodResolver(formSchema),
         defaultValues: {
             transactionId: '',
+            screenshot: undefined,
         },
     });
 
@@ -104,11 +129,32 @@ export default function WalletPage() {
             return;
         }
 
+        const file = values.screenshot[0];
+        let screenshotUrl = '';
+        
+        try {
+            screenshotUrl = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = (error) => reject(error);
+            });
+        } catch (error) {
+            toast({
+                title: 'File Read Error',
+                description: 'Could not read the screenshot file. Please try again.',
+                variant: 'destructive'
+            });
+            form.control.setError("screenshot", { type: "manual", message: "Error reading file" });
+            return;
+        }
+
         const transactionData = {
             userId: user.uid,
             momoTransactionId: values.transactionId,
             amount: 25000,
             status: 'pending' as const,
+            screenshotUrl: screenshotUrl,
         };
 
         const collectionRef = collection(firestore, 'payment-transactions');
@@ -125,7 +171,11 @@ export default function WalletPage() {
                 const permissionError = new FirestorePermissionError({
                     path: collectionRef.path,
                     operation: 'create',
-                    requestResourceData: { ...transactionData, createdAt: 'SERVER_TIMESTAMP' },
+                    requestResourceData: { 
+                        ...transactionData,
+                        screenshotUrl: transactionData.screenshotUrl.substring(0, 50) + '...',
+                        createdAt: 'SERVER_TIMESTAMP' 
+                    },
                 });
                 errorEmitter.emit('permission-error', permissionError);
                 toast({
@@ -176,14 +226,14 @@ export default function WalletPage() {
                                 <p className="text-sm text-muted-foreground">MTN MoMo Number</p>
                                 <p className="text-2xl font-bold text-primary">09XX XXX XXX</p>
                             </div>
-                            <p className="text-sm text-muted-foreground">After sending the payment, copy the <strong className="text-foreground">Transaction ID</strong> from your confirmation message and submit it here.</p>
+                            <p className="text-sm text-muted-foreground">After sending the payment, copy the <strong className="text-foreground">Transaction ID</strong> from your confirmation message and submit it here along with a screenshot.</p>
                         </CardContent>
                     </Card>
 
                      <Card className="bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-3"><Send />Submit Payment Proof</CardTitle>
-                            <CardDescription>Enter your MoMo Transaction ID below.</CardDescription>
+                            <CardDescription>Enter your MoMo Transaction ID and upload a screenshot of the confirmation.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Form {...form}>
@@ -196,6 +246,23 @@ export default function WalletPage() {
                                                 <FormLabel>MoMo Transaction ID</FormLabel>
                                                 <FormControl>
                                                     <Input placeholder="e.g., MP240101.1234.A12345" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="screenshot"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Payment Screenshot</FormLabel>
+                                                <FormControl>
+                                                    <Input 
+                                                        type="file" 
+                                                        accept="image/*"
+                                                        onChange={(e) => field.onChange(e.target.files)}
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -224,6 +291,7 @@ export default function WalletPage() {
                                <TableHeader>
                                    <TableRow>
                                        <TableHead>Transaction ID</TableHead>
+                                       <TableHead>Screenshot</TableHead>
                                        <TableHead>Date</TableHead>
                                        <TableHead>Amount</TableHead>
                                        <TableHead className="text-right">Status</TableHead>
@@ -233,6 +301,15 @@ export default function WalletPage() {
                                    {sortedTransactions.map(tx => (
                                        <TableRow key={tx.id}>
                                            <TableCell className="font-mono text-xs">{tx.momoTransactionId}</TableCell>
+                                           <TableCell>
+                                                {tx.screenshotUrl ? (
+                                                    <a href={tx.screenshotUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                                        View
+                                                    </a>
+                                                ) : (
+                                                    'N/A'
+                                                )}
+                                           </TableCell>
                                            <TableCell>{tx.createdAt ? format(tx.createdAt.toDate(), 'PPP p') : 'Processing...'}</TableCell>
                                            <TableCell className="font-semibold">{tx.amount.toLocaleString()} SSP</TableCell>
                                            <TableCell className="text-right">{getStatusBadge(tx.status)}</TableCell>
