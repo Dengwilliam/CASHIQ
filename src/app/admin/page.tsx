@@ -4,6 +4,7 @@ import { useAdmin } from '@/hooks/useAdmin';
 import TransactionsTable from '@/components/admin/transactions-table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
+import UsersTable from '@/components/admin/users-table';
 
 export default function AdminPage() {
   const { isAdmin, loading } = useAdmin();
@@ -44,6 +45,7 @@ export default function AdminPage() {
             <h1 className="text-4xl font-black tracking-tight text-primary sm:text-5xl">Admin Dashboard</h1>
         </header>
         <TransactionsTable />
+        <UsersTable />
       </div>
     </main>
   );
