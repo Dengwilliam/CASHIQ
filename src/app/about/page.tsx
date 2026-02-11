@@ -1,5 +1,5 @@
 import SiteHeader from '@/components/site-header';
-import { Badge } from '@/components/ui/badge';
+import { Landmark, WalletCards, PiggyBank } from 'lucide-react';
 
 export const metadata = {
   title: 'About Us | FinQuiz Challenge',
@@ -102,10 +102,19 @@ export default function AboutPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold mb-3">Sponsored By</h3>
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <Badge variant="secondary">Banks</Badge>
-                    <Badge variant="secondary">Fintechs</Badge>
-                    <Badge variant="secondary">SACCOs</Badge>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="flex items-center gap-2 p-3 bg-secondary rounded-lg border border-border">
+                        <Landmark className="h-5 w-5 text-secondary-foreground" />
+                        <span className="font-semibold text-sm text-secondary-foreground">Banks</span>
+                    </div>
+                     <div className="flex items-center gap-2 p-3 bg-secondary rounded-lg border border-border">
+                        <WalletCards className="h-5 w-5 text-secondary-foreground" />
+                        <span className="font-semibold text-sm text-secondary-foreground">Fintechs</span>
+                    </div>
+                     <div className="flex items-center gap-2 p-3 bg-secondary rounded-lg border border-border">
+                        <PiggyBank className="h-5 w-5 text-secondary-foreground" />
+                        <span className="font-semibold text-sm text-secondary-foreground">SACCOs</span>
+                    </div>
                   </div>
                 </div>
               </div>
