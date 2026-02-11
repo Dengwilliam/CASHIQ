@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, BarChart, CircleDollarSign } from 'lucide-react';
+import { ArrowRight, BarChart, CircleDollarSign, Loader2 } from 'lucide-react';
 import type { User } from 'firebase/auth';
 import Link from 'next/link';
 
@@ -12,9 +12,10 @@ type StartScreenProps = {
   loading: boolean;
   hasPlayedThisWeek: boolean | null;
   checkingForPastScore: boolean;
+  isGeneratingQuiz: boolean;
 };
 
-export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek, checkingForPastScore }: StartScreenProps) {
+export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek, checkingForPastScore, isGeneratingQuiz }: StartScreenProps) {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +39,14 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
         </Button>
       );
     }
+     if (isGeneratingQuiz) {
+        return (
+            <Button className="w-full" size="lg" disabled>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Generating Your Quiz...
+            </Button>
+        );
+    }
     if (!user) {
       return (
         <div className="text-center w-full">
@@ -59,7 +68,7 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
       );
     }
     return (
-       <Button type="submit" className="w-full" size="lg">
+       <Button type="submit" className="w-full" size="lg" disabled={isGeneratingQuiz}>
           Start Quiz
           <ArrowRight className="ml-2 h-5 w-5" />
         </Button>

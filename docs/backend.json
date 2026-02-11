@@ -43,6 +43,13 @@
           "type": "string",
           "format": "uri",
           "description": "URL of the user's profile picture."
+        },
+        "badges": {
+          "type": "array",
+          "description": "An array of badges earned by the user.",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": ["displayName", "email"]

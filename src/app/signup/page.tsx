@@ -65,6 +65,7 @@ export default function SignUpPage() {
         displayName: values.displayName,
         email: values.email,
         photoURL: user.photoURL, // Initially null
+        badges: [], // Add empty badges array
       };
 
       setDoc(userRef, userData)

@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trophy, RotateCw } from 'lucide-react';
+import { Trophy, RotateCw, Award } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -10,6 +10,7 @@ type ResultScreenProps = {
   score: number;
   onRestart: () => void;
   playerName: string;
+  newlyAwardedBadges: string[];
 };
 
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -24,7 +25,7 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-export default function ResultScreen({ score, onRestart, playerName }: ResultScreenProps) {
+export default function ResultScreen({ score, onRestart, playerName, newlyAwardedBadges = [] }: ResultScreenProps) {
   const [appUrl, setAppUrl] = useState('');
 
   useEffect(() => {
@@ -63,6 +64,19 @@ export default function ResultScreen({ score, onRestart, playerName }: ResultScr
           <p className="text-5xl font-bold text-primary">{score}</p>
         </div>
         <p className="text-muted-foreground italic">{getResultMessage()}</p>
+         {newlyAwardedBadges.length > 0 && (
+            <div className="pt-4 space-y-3 animate-in fade-in-50 duration-500">
+                <h3 className="font-semibold text-center text-lg">New Badges Unlocked!</h3>
+                <div className="flex justify-center gap-4 flex-wrap">
+                    {newlyAwardedBadges.map(badge => (
+                        <div key={badge} className="flex items-center gap-2 p-3 bg-accent/20 rounded-lg border border-accent/50">
+                            <Award className="h-6 w-6 text-accent" />
+                            <p className="font-medium text-accent-foreground">{badge}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )}
       </CardContent>
       <CardFooter className="flex-col sm:flex-row gap-2">
         <Button onClick={onRestart} className="w-full" size="lg" variant="outline">

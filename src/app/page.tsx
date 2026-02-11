@@ -1,20 +1,21 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { collection, query, where, getDocs, type Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, type Timestamp, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { startOfWeek, endOfWeek, isMonday } from 'date-fns';
-
 
 import StartScreen from "@/components/quiz/start-screen";
 import PaymentScreen from "@/components/quiz/payment-screen";
 import QuizScreen from "@/components/quiz/quiz-screen";
 import ResultScreen from "@/components/quiz/result-screen";
 import type { Question, Answer } from "@/lib/questions";
-import { questions as allQuestions } from "@/lib/questions";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useUser } from "@/firebase";
 import { saveScore } from "@/lib/scores";
 import SiteHeader from "@/components/site-header";
+import { generateQuiz } from "@/ai/flows/generate-quiz-flow";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 
 type GameState = "start" | "payment" | "quiz" | "results";
@@ -34,6 +35,8 @@ export default function Home() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [hasPlayedThisWeek, setHasPlayedThisWeek] = useState<boolean | null>(null);
   const [checkingForPastScore, setCheckingForPastScore] = useState(true);
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+  const [newlyAwardedBadges, setNewlyAwardedBadges] = useState<string[]>([]);
 
 
   const firestore = useFirestore();
@@ -54,26 +57,67 @@ export default function Home() {
     }
   }, [toast]);
 
-  const setupGame = useCallback(() => {
-    const shuffledQuestions = shuffleArray(allQuestions).slice(0, QUESTIONS_PER_GAME);
-    const questionsWithShuffledAnswers = shuffledQuestions.map(q => ({
-      ...q,
-      answers: shuffleArray(q.answers)
-    }));
-    setQuestions(questionsWithShuffledAnswers);
-  }, []);
+  const setupGame = useCallback(async () => {
+    setIsGeneratingQuiz(true);
+    try {
+      const quizOutput = await generateQuiz({ count: QUESTIONS_PER_GAME, difficulty: 'medium' });
+      const questionsWithShuffledAnswers = quizOutput.questions.map(q => ({
+        ...q,
+        answers: shuffleArray(q.answers)
+      }));
+      setQuestions(questionsWithShuffledAnswers);
+    } catch (error) {
+        console.error("Failed to generate AI quiz:", error);
+        toast({
+            title: "Error",
+            description: "Could not generate a new quiz. Please try again.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsGeneratingQuiz(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
-    setupGame();
-  }, [setupGame]);
+    const awardBadges = async () => {
+        if (!firestore || !user) return;
+        
+        const badges: string[] = [];
+        if (score >= 80 && score < 100) {
+            badges.push("Finance Whiz");
+        }
+        if (score === 100) {
+            badges.push("Perfect Score");
+        }
 
-  useEffect(() => {
-    if (gameState === "results" && firestore && user) {
-      saveScore(firestore, { 
-        playerName: user.displayName || "Anonymous", 
-        score,
-        userId: user.uid
-      });
+        if (badges.length > 0) {
+            setNewlyAwardedBadges(badges);
+            const userRef = doc(firestore, 'users', user.uid);
+            try {
+                await updateDoc(userRef, {
+                    badges: arrayUnion(...badges)
+                });
+            } catch (e) {
+                console.error("Failed to save badges", e);
+                const permissionError = new FirestorePermissionError({
+                    path: userRef.path,
+                    operation: 'update',
+                    requestResourceData: { badges: arrayUnion(...badges) },
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            }
+        }
+    }
+    
+    if (gameState === "results") {
+      if (firestore && user) {
+        saveScore(firestore, { 
+          playerName: user.displayName || "Anonymous", 
+          score,
+          userId: user.uid
+        });
+        awardBadges();
+      }
       // After saving the score, mark that the user has played this week
       setHasPlayedThisWeek(true);
     }
@@ -139,7 +183,7 @@ export default function Home() {
     };
   }, [gameState, toast]);
 
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
     if (!user) {
       toast({
         title: "Please log in",
@@ -158,12 +202,21 @@ export default function Home() {
     }
     setScore(0);
     setCurrentQuestionIndex(0);
-    setupGame(); // Re-shuffle questions for a new game
+    setNewlyAwardedBadges([]);
+    await setupGame();
     setGameState("payment");
   };
 
   const handlePaymentConfirm = () => {
-    setGameState("quiz");
+    if (questions.length > 0) {
+      setGameState("quiz");
+    } else {
+       toast({
+        title: "Quiz not ready",
+        description: "The quiz questions are still being generated. Please wait a moment.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAnswer = async (answer: Answer) => {
@@ -213,10 +266,10 @@ export default function Home() {
           />
         );
       case "results":
-        return <ResultScreen score={score} onRestart={handleRestart} playerName={user?.displayName || 'Player'} />;
+        return <ResultScreen score={score} onRestart={handleRestart} playerName={user?.displayName || 'Player'} newlyAwardedBadges={newlyAwardedBadges} />;
       case "start":
       default:
-        return <StartScreen onStart={handleStartGame} user={user} loading={loading} hasPlayedThisWeek={hasPlayedThisWeek} checkingForPastScore={checkingForPastScore} />;
+        return <StartScreen onStart={handleStartGame} user={user} loading={loading} hasPlayedThisWeek={hasPlayedThisWeek} checkingForPastScore={checkingForPastScore} isGeneratingQuiz={isGeneratingQuiz} />;
     }
   };
 
