@@ -42,6 +42,8 @@ export default function Home() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [hasPlayedThisWeek, setHasPlayedThisWeek] = useState<boolean | null>(null);
   const [checkingForPastScore, setCheckingForPastScore] = useState(true);
+  const [hasApprovedPaymentThisWeek, setHasApprovedPaymentThisWeek] = useState<boolean | null>(null);
+  const [isCheckingPayment, setIsCheckingPayment] = useState(true);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
   const [newlyAwardedBadges, setNewlyAwardedBadges] = useState<string[]>([]);
   const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
@@ -174,6 +176,46 @@ export default function Home() {
     checkUserScore();
   }, [user, firestore, gameState]);
 
+  useEffect(() => {
+    const checkUserPayment = async () => {
+        if (!firestore || !user) {
+            setHasApprovedPaymentThisWeek(false);
+            setIsCheckingPayment(false);
+            return;
+        }
+        setIsCheckingPayment(true);
+
+        const today = new Date();
+        const start = startOfWeek(today, { weekStartsOn: 1 });
+        const end = endOfWeek(today, { weekStartsOn: 1 });
+
+        const paymentsQuery = query(
+            collection(firestore, 'payment-transactions'),
+            where('userId', '==', user.uid)
+        );
+
+        try {
+            const querySnapshot = await getDocs(paymentsQuery);
+            const approvedPaymentsThisWeek = querySnapshot.docs.filter(doc => {
+                const paymentData = doc.data();
+                if (paymentData.createdAt && paymentData.status === 'approved') {
+                    const paymentDate = (paymentData.createdAt as Timestamp).toDate();
+                    return paymentDate >= start && paymentDate <= end;
+                }
+                return false;
+            });
+            setHasApprovedPaymentThisWeek(approvedPaymentsThisWeek.length > 0);
+        } catch (error) {
+            console.error("Error checking for approved payment:", error);
+            setHasApprovedPaymentThisWeek(false);
+        } finally {
+            setIsCheckingPayment(false);
+        }
+    };
+
+    checkUserPayment();
+  }, [user, firestore, gameState]);
+
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -198,6 +240,14 @@ export default function Home() {
       toast({
         title: "Please log in",
         description: "You must be logged in to start the quiz.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!hasApprovedPaymentThisWeek) {
+      toast({
+        title: "Payment Not Approved",
+        description: "Your entry fee for this week has not been approved yet. Please check your wallet.",
         variant: "destructive",
       });
       return;
@@ -295,7 +345,16 @@ export default function Home() {
                />;
       case "start":
       default:
-        return <StartScreen onStart={handleStartGame} user={user} loading={loading} hasPlayedThisWeek={hasPlayedThisWeek} checkingForPastScore={checkingForPastScore} isGeneratingQuiz={isGeneratingQuiz} />;
+        return <StartScreen 
+                  onStart={handleStartGame} 
+                  user={user} 
+                  loading={loading} 
+                  hasPlayedThisWeek={hasPlayedThisWeek} 
+                  checkingForPastScore={checkingForPastScore} 
+                  isGeneratingQuiz={isGeneratingQuiz}
+                  hasApprovedPaymentThisWeek={hasApprovedPaymentThisWeek}
+                  isCheckingPayment={isCheckingPayment} 
+                />;
     }
   };
 

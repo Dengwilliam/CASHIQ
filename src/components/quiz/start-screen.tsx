@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, BarChart, CircleDollarSign, Loader2 } from 'lucide-react';
+import { ArrowRight, BarChart, CircleDollarSign, Loader2, Wallet } from 'lucide-react';
 import type { User } from 'firebase/auth';
 import Link from 'next/link';
 
@@ -13,28 +13,24 @@ type StartScreenProps = {
   hasPlayedThisWeek: boolean | null;
   checkingForPastScore: boolean;
   isGeneratingQuiz: boolean;
+  hasApprovedPaymentThisWeek: boolean | null;
+  isCheckingPayment: boolean;
 };
 
-export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek, checkingForPastScore, isGeneratingQuiz }: StartScreenProps) {
+export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek, checkingForPastScore, isGeneratingQuiz, hasApprovedPaymentThisWeek, isCheckingPayment }: StartScreenProps) {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (user && !hasPlayedThisWeek) {
+    if (user && !hasPlayedThisWeek && hasApprovedPaymentThisWeek) {
       onStart();
     }
   };
 
   const renderFooterContent = () => {
-    if (loading) {
+    if (loading || checkingForPastScore || isCheckingPayment) {
       return (
         <Button className="w-full" size="lg" disabled>
-          Loading...
-        </Button>
-      );
-    }
-    if (checkingForPastScore) {
-      return (
-        <Button className="w-full" size="lg" disabled>
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           Checking your status...
         </Button>
       );
@@ -62,6 +58,19 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
                 <Link href="/leaderboard">
                     <BarChart className="mr-2 h-5 w-5" />
                     View Leaderboard
+                </Link>
+            </Button>
+        </div>
+      );
+    }
+    if (!hasApprovedPaymentThisWeek) {
+      return (
+        <div className="w-full flex flex-col items-center gap-4">
+            <p className="text-center text-muted-foreground">Your payment for this week's quiz needs to be approved before you can play.</p>
+            <Button asChild className="w-full" size="lg">
+                <Link href="/wallet">
+                    <Wallet className="mr-2 h-5 w-5" />
+                    Go to Wallet
                 </Link>
             </Button>
         </div>
