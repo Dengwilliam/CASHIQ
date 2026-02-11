@@ -15,8 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import { sendPasswordResetEmail } from 'firebase/auth';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -24,12 +23,10 @@ import SiteHeader from '@/components/site-header';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
   const auth = useAuth();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -37,21 +34,25 @@ export default function LoginPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
-      password: '',
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
-      router.push('/');
+      await sendPasswordResetEmail(auth, values.email);
+      toast({
+        title: 'Password Reset Email Sent',
+        description: 'Please check your inbox for instructions to reset your password.',
+      });
+      form.reset();
     } catch (error: any) {
       toast({
-        title: 'Login Failed',
+        title: 'Error',
         description: error.message || 'An unexpected error occurred.',
         variant: 'destructive',
       });
+    } finally {
       setLoading(false);
     }
   }
@@ -61,8 +62,8 @@ export default function LoginPage() {
       <SiteHeader />
       <Card className="w-full max-w-sm bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
         <CardHeader>
-          <CardTitle>Log In</CardTitle>
-          <CardDescription className="text-base">Enter your credentials to access your account.</CardDescription>
+          <CardTitle>Forgot Password</CardTitle>
+          <CardDescription className="text-base">Enter your email to receive a password reset link.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -80,36 +81,15 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Password</FormLabel>
-                      <Link
-                        href="/forgot-password"
-                        className="text-sm font-medium text-primary hover:underline"
-                      >
-                        Forgot password?
-                      </Link>
-                    </div>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Logging in...' : 'Log In'}
+                {loading ? 'Sending...' : 'Send Reset Link'}
               </Button>
             </form>
           </Form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Link href="/signup" className="font-medium text-primary hover:underline">
-              Sign up
+            Remember your password?{' '}
+            <Link href="/login" className="font-medium text-primary hover:underline">
+              Log in
             </Link>
           </p>
         </CardContent>
