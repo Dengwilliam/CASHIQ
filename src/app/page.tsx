@@ -5,7 +5,6 @@ import { collection, query, where, getDocs, type Timestamp, doc, updateDoc, arra
 import { startOfWeek, endOfWeek, isMonday } from 'date-fns';
 
 import StartScreen from "@/components/quiz/start-screen";
-import PaymentScreen from "@/components/quiz/payment-screen";
 import QuizScreen from "@/components/quiz/quiz-screen";
 import ResultScreen from "@/components/quiz/result-screen";
 import type { Question, Answer } from "@/lib/questions";
@@ -19,7 +18,7 @@ import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 
 
-type GameState = "start" | "payment" | "quiz" | "results";
+type GameState = "start" | "quiz" | "results";
 
 type AnsweredQuestion = {
   question: Question;
@@ -75,6 +74,7 @@ export default function Home() {
         answers: shuffleArray(q.answers)
       }));
       setQuestions(questionsWithShuffledAnswers);
+      setGameState("quiz");
     } catch (error) {
         console.error("Failed to generate AI quiz:", error);
         toast({
@@ -82,6 +82,7 @@ export default function Home() {
             description: "Could not generate a new quiz. Please try again.",
             variant: "destructive",
         });
+        setGameState("start");
     } finally {
         setIsGeneratingQuiz(false);
     }
@@ -214,19 +215,6 @@ export default function Home() {
     setNewlyAwardedBadges([]);
     setAnsweredQuestions([]);
     await setupGame();
-    setGameState("payment");
-  };
-
-  const handlePaymentConfirm = () => {
-    if (questions.length > 0) {
-      setGameState("quiz");
-    } else {
-       toast({
-        title: "Quiz not ready",
-        description: "The quiz questions are still being generated. Please wait a moment.",
-        variant: "destructive",
-      });
-    }
   };
 
   const handleAnswer = async (answer: Answer) => {
@@ -286,13 +274,6 @@ export default function Home() {
 
   const renderGameState = () => {
     switch (gameState) {
-      case "payment":
-        return (
-          <PaymentScreen
-            onConfirm={handlePaymentConfirm}
-            onCancel={() => setGameState("start")}
-          />
-        );
       case "quiz":
         return (
           <QuizScreen

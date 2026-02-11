@@ -53,6 +53,36 @@
         }
       },
       "required": ["displayName", "email"]
+    },
+    "paymentTransaction": {
+      "title": "Payment Transaction",
+      "description": "Represents a manual payment transaction submitted by a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who made the payment."
+        },
+        "momoTransactionId": {
+          "type": "string",
+          "description": "The MTN MoMo transaction ID provided by the user."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount paid."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the payment.",
+          "enum": ["pending", "approved", "rejected"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of when the payment proof was submitted."
+        }
+      },
+      "required": ["userId", "momoTransactionId", "amount", "status", "createdAt"]
     }
   },
   "auth": {
@@ -70,6 +100,12 @@
         "$ref": "#/backend/entities/userProfile"
       },
       "description": "Stores user profile information."
+    },
+    "/payment-transactions/{transactionId}": {
+      "schema": {
+        "$ref": "#/backend/entities/paymentTransaction"
+      },
+      "description": "Stores user-submitted payment transactions."
     }
   }
 }

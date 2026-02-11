@@ -3,7 +3,7 @@
 import { signOut, type Auth } from 'firebase/auth';
 import { useAuth, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import { LogOut, UserPlus, LogIn, User as UserIcon } from 'lucide-react';
+import { LogOut, UserPlus, LogIn, User as UserIcon, Wallet } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +44,12 @@ export default function AuthButton() {
             <Link href="/profile">
               <UserIcon className="mr-2 h-4 w-4" />
               <span>Profile</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/wallet">
+              <Wallet className="mr-2 h-4 w-4" />
+              <span>Wallet</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
