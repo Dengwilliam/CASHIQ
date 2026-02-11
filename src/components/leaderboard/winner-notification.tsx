@@ -81,16 +81,32 @@ export default function WinnerNotification() {
         // 4. Check if current user is a winner
         const winnerIndex = winners.findIndex(winner => winner.userId === user.uid);
 
-        if (winnerIndex !== -1) {
+        if (winnerIndex !== -1 && user.email) {
           const currentUserWinner = winners[winnerIndex];
           const rank = winnerIndex + 1;
+          const rankSuffix = getRankSuffix(rank);
 
           // 5. Show toast notification
           toast({
             title: 'Congratulations! You\'re a Winner!',
-            description: `You ranked ${rank}${getRankSuffix(rank)} on last week\'s leaderboard with a score of ${currentUserWinner.score}. Your prize has been credited.`,
+            description: `You ranked ${rank}${rankSuffix} on last week\'s leaderboard with a score of ${currentUserWinner.score}. Your prize has been credited.`,
             duration: 10000,
           });
+
+          // Also send an email
+          const subject = "Congratulations! You're a FinQuiz Winner!";
+          const htmlBody = `
+              <p>Hello ${user.displayName},</p>
+              <p>Congratulations! You ranked <strong>${rank}${rankSuffix}</strong> on last week's FinQuiz leaderboard with an amazing score of ${currentUserWinner.score}.</p>
+              <p>Your prize money should be sent to your registered MoMo number shortly. Keep an eye out for it!</p>
+              <p>Thanks for playing,<br/>The FinQuiz Challenge Team</p>
+          `;
+          fetch('/api/send-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ to: user.email, subject, htmlBody })
+          }).catch(e => console.error("Email fetch failed:", e));
+
 
           // 6. Mark notification as shown
           localStorage.setItem(winnerNotificationKey, 'true');
