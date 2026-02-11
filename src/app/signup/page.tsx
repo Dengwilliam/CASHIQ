@@ -66,6 +66,7 @@ export default function SignUpPage() {
         email: values.email,
         photoURL: user.photoURL, // Initially null
         badges: [], // Add empty badges array
+        momoNumber: '', // Initialize empty MoMo number
       };
 
       setDoc(userRef, userData)

@@ -1,23 +1,31 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import SiteHeader from '@/components/site-header';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, doc, setDoc } from 'firebase/firestore';
 import type { Timestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Award, Star, TrendingUp, HelpCircle } from 'lucide-react';
+import { Award, Star, TrendingUp, HelpCircle, Landmark } from 'lucide-react';
 import { useDoc } from '@/firebase/firestore/use-doc';
-import { doc } from 'firebase/firestore';
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from 'recharts';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 
 type Score = {
@@ -32,7 +40,12 @@ type UserProfile = {
     email: string;
     photoURL?: string;
     badges?: string[];
+    momoNumber?: string;
 }
+
+const payoutFormSchema = z.object({
+  momoNumber: z.string().min(9, { message: "Please enter a valid phone number." }).optional().or(z.literal('')),
+});
 
 function ProfileSkeleton() {
     return (
@@ -65,6 +78,7 @@ function ProfileSkeleton() {
 export default function ProfilePage() {
     const { user, loading: userLoading } = useUser();
     const firestore = useFirestore();
+    const { toast } = useToast();
 
     const userProfileRef = useMemoFirebase(() => {
         if (!firestore || !user) return null;
@@ -109,6 +123,47 @@ export default function ProfilePage() {
                 score: score.score
             }));
     }, [scoresData]);
+
+    const payoutForm = useForm<z.infer<typeof payoutFormSchema>>({
+        resolver: zodResolver(payoutFormSchema),
+        defaultValues: {
+            momoNumber: '',
+        },
+    });
+    
+    useEffect(() => {
+        if (userProfile) {
+            payoutForm.reset({ momoNumber: userProfile.momoNumber || '' });
+        }
+    }, [userProfile, payoutForm]);
+
+    async function onPayoutSubmit(values: z.infer<typeof payoutFormSchema>) {
+        if (!firestore || !user) return;
+        
+        const userRef = doc(firestore, 'users', user.uid);
+        const dataToUpdate = { momoNumber: values.momoNumber };
+    
+        setDoc(userRef, dataToUpdate, { merge: true })
+            .then(() => {
+                toast({
+                    title: 'Success!',
+                    description: 'Your payout information has been saved.',
+                });
+            })
+            .catch((serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: userRef.path,
+                    operation: 'update',
+                    requestResourceData: dataToUpdate,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                toast({
+                    title: 'Save Failed',
+                    description: 'Could not save your payout information. Please try again.',
+                    variant: 'destructive',
+                });
+            });
+    }
 
 
     if (userLoading) {
@@ -195,6 +250,38 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                         )}
+
+                        <div>
+                            <h2 className="text-2xl font-bold mb-4 text-center">Payout Information</h2>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-3 text-xl"><Landmark /> My MoMo Number</CardTitle>
+                                    <CardDescription>This is the number where your winnings will be sent. Please ensure it is correct.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <Form {...payoutForm}>
+                                        <form onSubmit={payoutForm.handleSubmit(onPayoutSubmit)} className="space-y-4">
+                                            <FormField
+                                                control={payoutForm.control}
+                                                name="momoNumber"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>MTN MoMo Number</FormLabel>
+                                                        <FormControl>
+                                                            <Input placeholder="e.g., 092xxxxxxx" {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <Button type="submit" disabled={payoutForm.formState.isSubmitting}>
+                                                {payoutForm.formState.isSubmitting ? 'Saving...' : 'Save Payout Info'}
+                                            </Button>
+                                        </form>
+                                    </Form>
+                                </CardContent>
+                            </Card>
+                        </div>
                         
                         {(scoresLoading || chartData.length > 0) && (
                             <div>

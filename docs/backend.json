@@ -50,6 +50,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "momoNumber": {
+          "type": "string",
+          "description": "The user's MTN MoMo number for receiving payments."
         }
       },
       "required": ["displayName", "email"]
