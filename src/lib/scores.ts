@@ -12,14 +12,14 @@ export type Score = {
 export const saveScore = (db: Firestore, scoreData: Score) => {
   if (!scoreData.playerName || scoreData.score === undefined || !scoreData.userId) {
     console.error("Attempted to save score with invalid data:", scoreData);
-    return;
+    return Promise.resolve();
   }
   const scoresCollection = collection(db, 'scores');
   const dataToSave = {
     ...scoreData,
     createdAt: serverTimestamp(),
   };
-  addDoc(scoresCollection, dataToSave)
+  return addDoc(scoresCollection, dataToSave)
     .catch((serverError) => {
       const permissionError = new FirestorePermissionError({
         path: scoresCollection.path,

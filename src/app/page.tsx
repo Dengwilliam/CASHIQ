@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { collection, query, where, getDocs, type Timestamp, doc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { startOfWeek, endOfWeek, isMonday } from 'date-fns';
+import { collection, query, where, getDocs, type Timestamp, doc, updateDoc, arrayUnion, getDoc, serverTimestamp, type DocumentData } from 'firebase/firestore';
+import { startOfWeek, endOfWeek, isMonday, isSameWeek, subWeeks } from 'date-fns';
 
 import StartScreen from "@/components/quiz/start-screen";
 import QuizScreen from "@/components/quiz/quiz-screen";
@@ -47,6 +47,8 @@ export default function Home() {
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
   const [newlyAwardedBadges, setNewlyAwardedBadges] = useState<string[]>([]);
   const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
+  const [hotStreak, setHotStreak] = useState(0);
+  const [maxHotStreak, setMaxHotStreak] = useState(0);
 
 
   const firestore = useFirestore();
@@ -91,49 +93,123 @@ export default function Home() {
   }, [toast]);
 
   useEffect(() => {
-    const awardBadges = async () => {
-        if (!firestore || !user) return;
-        
-        const badges: string[] = [];
-        if (score >= 80 && score < 100) {
-            badges.push("Finance Whiz");
+    const processEndGame = async () => {
+      if (!firestore || !user) return;
+  
+      // 1. Save the current score and wait for it to complete
+      await saveScore(firestore, {
+        playerName: user.displayName || 'Anonymous',
+        score,
+        userId: user.uid,
+      });
+  
+      const newBadges: string[] = [];
+      const userRef = doc(firestore, 'users', user.uid);
+      let userProfileData: DocumentData | null = null;
+      let existingBadges: string[] = [];
+  
+      try {
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          userProfileData = userDoc.data();
+          existingBadges = userProfileData?.badges || [];
         }
-        if (score === 100) {
-            badges.push("Perfect Score");
-        }
-
-        if (badges.length > 0) {
-            setNewlyAwardedBadges(badges);
-            const userRef = doc(firestore, 'users', user.uid);
-            try {
-                await updateDoc(userRef, {
-                    badges: arrayUnion(...badges)
-                });
-            } catch (e) {
-                console.error("Failed to save badges", e);
-                const permissionError = new FirestorePermissionError({
-                    path: userRef.path,
-                    operation: 'update',
-                    requestResourceData: { badges: arrayUnion(...badges) },
-                });
-                errorEmitter.emit('permission-error', permissionError);
+      } catch (e) {
+        console.error('Could not fetch user profile for badge check', e);
+      }
+  
+      // --- BADGE LOGIC ---
+  
+      // 2. Score-based badges
+      if (score >= 80) newBadges.push('Finance Whiz');
+      if (score === 100) newBadges.push('Perfect Score');
+  
+      // 3. Hot Streak badge
+      if (maxHotStreak >= 5) newBadges.push('Hot Streak');
+  
+      // 4. Comeback Kid badge
+      const scoresQuery = query(
+        collection(firestore, 'scores'),
+        where('userId', '==', user.uid)
+      );
+      try {
+        const querySnapshot = await getDocs(scoresQuery);
+        if (querySnapshot.docs.length > 1) {
+            const allScores = querySnapshot.docs.map(doc => ({ score: doc.data().score, createdAt: doc.data().createdAt as Timestamp }));
+            allScores.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+            const previousScores = allScores.slice(1);
+            if (previousScores.length > 0) {
+                const previousHighScore = Math.max(...previousScores.map(s => s.score));
+                if (score > previousHighScore) {
+                    newBadges.push('Comeback Kid');
+                }
             }
         }
-    }
-    
-    if (gameState === "results") {
-      if (firestore && user) {
-        saveScore(firestore, { 
-          playerName: user.displayName || "Anonymous", 
-          score,
-          userId: user.uid
-        });
-        awardBadges();
+      } catch (e) {
+        console.error('Could not check for past scores for Comeback Kid badge', e);
       }
+  
+      // 5. Weekly Warrior badge & update play history
+      let consecutiveWeeksPlayed = userProfileData?.consecutiveWeeksPlayed || 0;
+      const lastPlayTimestamp = userProfileData?.lastPlayTimestamp;
+      const today = new Date();
+  
+      if (lastPlayTimestamp) {
+        const lastPlayDate = (lastPlayTimestamp as Timestamp).toDate();
+        const lastWeek = subWeeks(today, 1);
+        if (isSameWeek(lastPlayDate, lastWeek, { weekStartsOn: 1 })) {
+          consecutiveWeeksPlayed += 1;
+        } else if (!isSameWeek(lastPlayDate, today, { weekStartsOn: 1 })) {
+          consecutiveWeeksPlayed = 1; // Reset if they missed a week
+        }
+      } else {
+        consecutiveWeeksPlayed = 1; // First time playing
+      }
+  
+      if (consecutiveWeeksPlayed >= 3) {
+        newBadges.push('Weekly Warrior');
+      }
+  
+      // --- END BADGE LOGIC ---
+  
+      // Filter out badges the user already has
+      const uniqueNewBadges = newBadges.filter((b) => !existingBadges.includes(b));
+  
+      if (uniqueNewBadges.length > 0) {
+        setNewlyAwardedBadges(uniqueNewBadges);
+      }
+  
+      // Update user profile with new badges and play history
+      try {
+        const updateData: { [key: string]: any } = {
+          lastPlayTimestamp: serverTimestamp(),
+          consecutiveWeeksPlayed,
+        };
+        if (uniqueNewBadges.length > 0) {
+          updateData.badges = arrayUnion(...uniqueNewBadges);
+        }
+  
+        updateDoc(userRef, updateData).catch(e => {
+            console.error('Failed to update user profile with badges/history', e);
+             const permissionError = new FirestorePermissionError({
+                path: userRef.path,
+                operation: 'update',
+                requestResourceData: updateData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+      } catch (e) {
+        console.error('Failed to prepare user profile update', e);
+      }
+  
       // After saving the score, mark that the user has played this week
       setHasPlayedThisWeek(true);
+    };
+  
+    if (gameState === 'results') {
+      processEndGame();
     }
-  }, [gameState, firestore, user, score]);
+  }, [gameState, firestore, user, score, maxHotStreak]);
 
   useEffect(() => {
     const checkUserScore = async () => {
@@ -264,6 +340,8 @@ export default function Home() {
     setCurrentQuestionIndex(0);
     setNewlyAwardedBadges([]);
     setAnsweredQuestions([]);
+    setHotStreak(0);
+    setMaxHotStreak(0);
     await setupGame();
   };
 
@@ -272,6 +350,11 @@ export default function Home() {
     const currentQuestion = questions[currentQuestionIndex];
     if (isCorrect) {
       setScore((prev) => prev + 10);
+      const newHotStreak = hotStreak + 1;
+      setHotStreak(newHotStreak);
+      setMaxHotStreak(prevMax => Math.max(prevMax, newHotStreak));
+    } else {
+      setHotStreak(0);
     }
 
     let explanation: string | null = null;

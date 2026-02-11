@@ -30,6 +30,10 @@
       "description": "Represents a user's profile information.",
       "type": "object",
       "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The user's unique ID."
+        },
         "displayName": {
           "type": "string",
           "description": "The user's display name."
@@ -54,9 +58,18 @@
         "momoNumber": {
           "type": "string",
           "description": "The user's MTN MoMo number for receiving payments."
+        },
+        "consecutiveWeeksPlayed": {
+          "type": "number",
+          "description": "The number of consecutive weeks the user has played."
+        },
+        "lastPlayTimestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of the last time the user played."
         }
       },
-      "required": ["displayName", "email"]
+      "required": ["uid", "displayName", "email"]
     },
     "paymentTransaction": {
       "title": "Payment Transaction",
