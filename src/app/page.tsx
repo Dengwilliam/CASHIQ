@@ -6,6 +6,7 @@ import { startOfWeek, endOfWeek, isMonday } from 'date-fns';
 
 
 import StartScreen from "@/components/quiz/start-screen";
+import PaymentScreen from "@/components/quiz/payment-screen";
 import QuizScreen from "@/components/quiz/quiz-screen";
 import ResultScreen from "@/components/quiz/result-screen";
 import type { Question, Answer } from "@/lib/questions";
@@ -16,7 +17,7 @@ import { saveScore } from "@/lib/scores";
 import SiteHeader from "@/components/site-header";
 
 
-type GameState = "start" | "quiz" | "results";
+type GameState = "start" | "payment" | "quiz" | "results";
 
 const QUESTIONS_PER_GAME = 10;
 const TAB_SWITCH_PENALTY = 5;
@@ -158,6 +159,10 @@ export default function Home() {
     setScore(0);
     setCurrentQuestionIndex(0);
     setupGame(); // Re-shuffle questions for a new game
+    setGameState("payment");
+  };
+
+  const handlePaymentConfirm = () => {
     setGameState("quiz");
   };
 
@@ -189,6 +194,13 @@ export default function Home() {
 
   const renderGameState = () => {
     switch (gameState) {
+      case "payment":
+        return (
+          <PaymentScreen
+            onConfirm={handlePaymentConfirm}
+            onCancel={() => setGameState("start")}
+          />
+        );
       case "quiz":
         return (
           <QuizScreen
