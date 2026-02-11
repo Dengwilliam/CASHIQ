@@ -14,11 +14,19 @@ import { useFirestore, useUser } from "@/firebase";
 import { saveScore } from "@/lib/scores";
 import SiteHeader from "@/components/site-header";
 import { generateQuiz } from "@/ai/flows/generate-quiz-flow";
+import { generateExplanation } from "@/ai/flows/generate-explanation-flow";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 
 
 type GameState = "start" | "payment" | "quiz" | "results";
+
+type AnsweredQuestion = {
+  question: Question;
+  selectedAnswer: Answer;
+  isCorrect: boolean;
+  explanation: string | null;
+};
 
 const QUESTIONS_PER_GAME = 10;
 const TAB_SWITCH_PENALTY = 5;
@@ -37,6 +45,7 @@ export default function Home() {
   const [checkingForPastScore, setCheckingForPastScore] = useState(true);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
   const [newlyAwardedBadges, setNewlyAwardedBadges] = useState<string[]>([]);
+  const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
 
 
   const firestore = useFirestore();
@@ -203,6 +212,7 @@ export default function Home() {
     setScore(0);
     setCurrentQuestionIndex(0);
     setNewlyAwardedBadges([]);
+    setAnsweredQuestions([]);
     await setupGame();
     setGameState("payment");
   };
@@ -221,9 +231,38 @@ export default function Home() {
 
   const handleAnswer = async (answer: Answer) => {
     const isCorrect = answer.isCorrect;
+    const currentQuestion = questions[currentQuestionIndex];
     if (isCorrect) {
       setScore((prev) => prev + 10);
     }
+
+    let explanation: string | null = null;
+    if (!isCorrect) {
+      try {
+        const correctAnswer = currentQuestion.answers.find(a => a.isCorrect);
+        if (correctAnswer) {
+          const result = await generateExplanation({
+            question: currentQuestion.text,
+            userAnswer: answer.text,
+            correctAnswer: correctAnswer.text
+          });
+          explanation = result.explanation;
+        }
+      } catch(e) {
+        console.error("Error generating explanation:", e);
+        explanation = "There was an error generating an explanation for this question.";
+      }
+    }
+
+    setAnsweredQuestions(prev => [
+      ...prev,
+      {
+        question: currentQuestion,
+        selectedAnswer: answer,
+        isCorrect,
+        explanation
+      }
+    ]);
 
     setTimeout(() => {
       if (currentQuestionIndex < questions.length - 1) {
@@ -266,7 +305,13 @@ export default function Home() {
           />
         );
       case "results":
-        return <ResultScreen score={score} onRestart={handleRestart} playerName={user?.displayName || 'Player'} newlyAwardedBadges={newlyAwardedBadges} />;
+        return <ResultScreen 
+                  score={score} 
+                  onRestart={handleRestart} 
+                  playerName={user?.displayName || 'Player'} 
+                  newlyAwardedBadges={newlyAwardedBadges} 
+                  answeredQuestions={answeredQuestions}
+               />;
       case "start":
       default:
         return <StartScreen onStart={handleStartGame} user={user} loading={loading} hasPlayedThisWeek={hasPlayedThisWeek} checkingForPastScore={checkingForPastScore} isGeneratingQuiz={isGeneratingQuiz} />;

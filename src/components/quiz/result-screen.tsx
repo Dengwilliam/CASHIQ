@@ -2,15 +2,26 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trophy, RotateCw, Award } from 'lucide-react';
+import { Trophy, RotateCw, Award, CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { cn } from '@/lib/utils';
+import type { Question, Answer } from '@/lib/questions';
+
+type AnsweredQuestion = {
+  question: Question;
+  selectedAnswer: Answer;
+  isCorrect: boolean;
+  explanation: string | null;
+};
 
 type ResultScreenProps = {
   score: number;
   onRestart: () => void;
   playerName: string;
-  newlyAwardedBadges: string[];
+  newlyAwardedBadges?: string[];
+  answeredQuestions?: AnsweredQuestion[];
 };
 
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -25,7 +36,7 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-export default function ResultScreen({ score, onRestart, playerName, newlyAwardedBadges = [] }: ResultScreenProps) {
+export default function ResultScreen({ score, onRestart, playerName, newlyAwardedBadges = [], answeredQuestions = [] }: ResultScreenProps) {
   const [appUrl, setAppUrl] = useState('');
 
   useEffect(() => {
@@ -75,6 +86,40 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
                         </div>
                     ))}
                 </div>
+            </div>
+        )}
+        {answeredQuestions.length > 0 && (
+            <div className="pt-6 text-left">
+                <h3 className="text-xl font-bold mb-3 text-center">Quiz Review</h3>
+                <Accordion type="single" collapsible className="w-full">
+                    {answeredQuestions.map(({ question, selectedAnswer, isCorrect, explanation }, index) => (
+                        <AccordionItem value={`item-${index}`} key={question.id}>
+                            <AccordionTrigger className="hover:no-underline text-base">
+                                <div className="flex items-center gap-3 flex-1">
+                                    {isCorrect ? (
+                                        <CheckCircle className="h-5 w-5 text-success shrink-0" />
+                                    ) : (
+                                        <XCircle className="h-5 w-5 text-destructive shrink-0" />
+                                    )}
+                                    <span className="text-left flex-1">{question.text}</span>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="space-y-3 pl-8">
+                                <p className="text-sm">Your answer: <span className={cn("font-semibold", !isCorrect && "text-destructive")}>{selectedAnswer.text}</span></p>
+                                {!isCorrect && (
+                                    <>
+                                      <p className="text-sm">Correct answer: <span className="font-semibold text-success">{question.answers.find(a => a.isCorrect)?.text}</span></p>
+                                      {explanation && (
+                                          <div className="p-3 bg-secondary rounded-md border border-border mt-2">
+                                              <p className="text-sm text-muted-foreground">{explanation}</p>
+                                          </div>
+                                      )}
+                                    </>
+                                )}
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
             </div>
         )}
       </CardContent>
