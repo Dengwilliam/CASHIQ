@@ -100,7 +100,7 @@ export default function SignUpPage() {
       <Card className="w-full max-w-sm bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
         <CardHeader>
           <CardTitle>Create an Account</CardTitle>
-          <CardDescription>Enter your details to get started.</CardDescription>
+          <CardDescription className="text-base">Enter your details to get started.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>

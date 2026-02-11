@@ -69,11 +69,11 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
   return (
     <Card className="bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
       <CardHeader className="text-center">
-        <CardTitle className="text-5xl md:text-7xl font-black text-foreground flex items-center justify-center flex-wrap gap-x-4">
+        <CardTitle className="text-4xl sm:text-5xl font-black text-foreground flex items-center justify-center flex-wrap gap-x-4">
           <span>Learn. Play. Earn.</span>
           <CircleDollarSign className="w-12 h-12 md:w-16 md:h-16 text-primary" />
         </CardTitle>
-        <CardDescription className="text-lg md:text-xl text-foreground/80 pt-2">
+        <CardDescription className="text-lg text-foreground/80 pt-2">
           Gamified financial literacy with weekly cash rewards
         </CardDescription>
       </CardHeader>
@@ -108,7 +108,7 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
                 </div>
             </div>
           {user && (
-            <div className="text-center text-lg pt-4">
+            <div className="text-center text-base pt-4">
               Welcome, <span className="font-bold text-primary">{user.displayName}!</span>
             </div>
           )}

@@ -20,38 +20,38 @@ export default function AboutPage() {
       <main className="container mx-auto px-4 py-12 md:px-6 lg:py-16 mt-20 animate-in fade-in-50 duration-500">
         <div className="mx-auto max-w-4xl space-y-12">
           <header className="text-center">
-            <h1 className="text-4xl font-black tracking-tight text-primary sm:text-5xl md:text-6xl">
+            <h1 className="text-4xl font-black tracking-tight text-primary sm:text-5xl">
               About FinQuiz Challenge
             </h1>
-            <p className="mt-4 text-lg text-foreground/80 max-w-2xl mx-auto">
+            <p className="mt-4 text-base text-foreground/80 max-w-2xl mx-auto">
               Empowering people to learn finance through fun, competition, and rewards.
             </p>
           </header>
 
           <section id="mission">
             <h2 className="text-3xl font-bold tracking-tight mb-4">Our Mission</h2>
-            <p className="text-lg text-foreground/80">
+            <p className="text-base text-foreground/80">
               At FinQuiz Challenge, our mission is to improve financial literacy by making learning simple, exciting, and rewarding. We believe that everyone deserves access to financial knowledge — and we’re using gamification to make that possible.
             </p>
           </section>
 
           <section id="what-we-do">
             <h2 className="text-3xl font-bold tracking-tight mb-4">What We Do</h2>
-            <p className="text-lg text-foreground/80">
+            <p className="text-base text-foreground/80">
               We offer weekly financial quiz competitions where players test their knowledge, climb leaderboards, and earn real rewards. Through short quizzes, achievements, and fun challenges, we turn essential financial skills into a competitive game that anyone can enjoy.
             </p>
           </section>
 
           <section id="why-we-built-this">
             <h2 className="text-3xl font-bold tracking-tight mb-4">Why We Built This</h2>
-            <p className="text-lg text-foreground/80">
+            <p className="text-base text-foreground/80">
               Many young people want to learn how to manage money, invest, budget, and plan for the future — but traditional education is often boring, confusing, or inaccessible. FinQuiz Challenge was created to close this gap by delivering bite-sized financial knowledge in an entertaining and interactive way.
             </p>
           </section>
 
           <section id="what-makes-us-different">
             <h2 className="text-3xl font-bold tracking-tight mb-4">What Makes Us Different</h2>
-            <ul className="space-y-3 text-lg text-foreground/80 list-disc list-inside">
+            <ul className="space-y-3 text-base text-foreground/80 list-disc list-inside">
               <li><span className="font-semibold">Gamified learning approach</span></li>
               <li><span className="font-semibold">Real cash rewards</span></li>
               <li><span className="font-semibold">Bite-sized financial lessons</span></li>
@@ -59,14 +59,14 @@ export default function AboutPage() {
               <li><span className="font-semibold">A fair ranking system</span></li>
               <li><span className="font-semibold">Safe, secure wallet and payouts</span></li>
             </ul>
-            <p className="mt-4 text-lg text-foreground/80 italic">
+            <p className="mt-4 text-base text-foreground/80 italic">
               FinQuiz Challenge isn’t just another quiz game — it combines learning with real-world rewards, making the journey both educational and motivating.
             </p>
           </section>
 
           <section id="vision">
             <h2 className="text-3xl font-bold tracking-tight mb-4">Our Vision</h2>
-            <p className="text-lg text-foreground/80">
+            <p className="text-base text-foreground/80">
               Our vision is to become Africa’s leading platform for financial education through gamification — helping millions build confidence in money matters while having fun.
             </p>
           </section>
@@ -85,7 +85,7 @@ export default function AboutPage() {
           
           <section id="founder">
             <h2 className="text-3xl font-bold tracking-tight mb-4">Meet the Founder</h2>
-            <p className="text-lg text-foreground/80">
+            <p className="text-base text-foreground/80">
               Founded by [Founder's Name], FinQuiz Challenge was built from a passion to improve financial knowledge in a fun and accessible way.
             </p>
           </section>

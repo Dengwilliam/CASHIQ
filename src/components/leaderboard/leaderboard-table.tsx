@@ -109,7 +109,7 @@ export default function LeaderboardTable() {
     <Card className="bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
       <CardHeader className="text-center">
         <CardTitle className="text-3xl font-bold">Weekly Leaderboard</CardTitle>
-        <CardDescription>
+        <CardDescription className="text-base">
           {week ? `Top 10 players for ${format(week.start, 'MMM d')} – ${format(week.end, 'MMM d, yyyy')}` : 'Top 10 players of the week.'}
         </CardDescription>
       </CardHeader>

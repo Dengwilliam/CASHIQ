@@ -62,7 +62,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
         <CardHeader>
           <CardTitle>Log In</CardTitle>
-          <CardDescription>Enter your credentials to access your account.</CardDescription>
+          <CardDescription className="text-base">Enter your credentials to access your account.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>

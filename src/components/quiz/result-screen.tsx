@@ -53,7 +53,7 @@ export default function ResultScreen({ score, onRestart, playerName }: ResultScr
           <Trophy className="h-12 w-12 text-primary" />
         </div>
         <CardTitle className="text-3xl font-bold">Quiz Finished!</CardTitle>
-        <CardDescription className="pt-2">
+        <CardDescription className="pt-2 text-base">
           Well done, {playerName}! Your score will be submitted to the weekly leaderboard.
         </CardDescription>
       </CardHeader>
