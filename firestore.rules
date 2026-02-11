@@ -5,7 +5,7 @@ service cloud.firestore {
     // Admin collection: Manually managed in Firebase Console.
     // Client-side can only read to check for admin status. No writes allowed from client.
     match /admins/{userId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null && request.auth.uid == userId;
       allow write: if false;
     }
 
