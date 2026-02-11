@@ -151,6 +151,7 @@ export default function WalletPage() {
 
         const transactionData = {
             userId: user.uid,
+            playerName: user.displayName || 'Unknown Player',
             momoTransactionId: values.transactionId,
             amount: 25000,
             status: 'pending' as const,

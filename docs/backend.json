@@ -1,5 +1,17 @@
 {
   "entities": {
+    "admin": {
+      "title": "Admin",
+      "description": "Represents a user with administrative privileges.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The UID of the admin user."
+        }
+      },
+      "required": ["userId"]
+    },
     "score": {
       "title": "Score",
       "description": "Represents a score entry for the quiz.",
@@ -80,6 +92,10 @@
           "type": "string",
           "description": "The ID of the user who made the payment."
         },
+        "playerName": {
+          "type": "string",
+          "description": "The display name of the user who made the payment."
+        },
         "momoTransactionId": {
           "type": "string",
           "description": "The MTN MoMo transaction ID provided by the user."
@@ -104,13 +120,19 @@
           "description": "Data URI of the uploaded screenshot for payment proof."
         }
       },
-      "required": ["userId", "momoTransactionId", "amount", "status", "createdAt"]
+      "required": ["userId", "momoTransactionId", "amount", "status", "createdAt", "playerName"]
     }
   },
   "auth": {
     "providers": ["Email/Password"]
   },
   "firestore": {
+    "/admins/{adminId}": {
+      "schema": {
+        "$ref": "#/backend/entities/admin"
+      },
+      "description": "Stores a list of user UIDs that have admin privileges."
+    },
     "/scores/{scoreId}": {
       "schema": {
         "$ref": "#/backend/entities/score"
