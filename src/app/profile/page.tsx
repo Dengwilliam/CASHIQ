@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import type { UserProfile } from '@/lib/user-profile';
 
 
 type Score = {
@@ -33,14 +34,6 @@ type Score = {
     score: number;
     createdAt: Timestamp;
     playerName: string;
-}
-
-type UserProfile = {
-    displayName: string;
-    email: string;
-    photoURL?: string;
-    badges?: string[];
-    momoNumber?: string;
 }
 
 const payoutFormSchema = z.object({

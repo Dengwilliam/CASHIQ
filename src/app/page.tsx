@@ -9,13 +9,16 @@ import QuizScreen from "@/components/quiz/quiz-screen";
 import ResultScreen from "@/components/quiz/result-screen";
 import type { Question, Answer } from "@/lib/questions";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, useUser } from "@/firebase";
+import { useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { saveScore } from "@/lib/scores";
 import SiteHeader from "@/components/site-header";
 import { generateQuiz } from "@/ai/flows/generate-quiz-flow";
 import { generateExplanation } from "@/ai/flows/generate-explanation-flow";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
+import OnboardingTour from "@/components/onboarding-tour";
+import { useDoc } from "@/firebase/firestore/use-doc";
+import type { UserProfile } from "@/lib/user-profile";
 
 
 type GameState = "start" | "quiz" | "results";
@@ -49,11 +52,30 @@ export default function Home() {
   const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
   const [hotStreak, setHotStreak] = useState(0);
   const [maxHotStreak, setMaxHotStreak] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
 
   const firestore = useFirestore();
   const { user, loading } = useUser();
   const { toast } = useToast();
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>(userProfileRef);
+
+  useEffect(() => {
+    // Check if onboarding tour should be shown for new users.
+    if (user && userProfile && userProfile.hasCompletedOnboarding === false && !profileLoading) {
+      // Use a timeout to avoid showing the dialog immediately on page load, which can be jarring.
+      const timer = setTimeout(() => {
+        setShowOnboarding(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [user, userProfile, profileLoading]);
 
   useEffect(() => {
     const today = new Date();
@@ -444,6 +466,7 @@ export default function Home() {
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
       <SiteHeader />
+      {user && <OnboardingTour open={showOnboarding} onOpenChange={setShowOnboarding} />}
       <div className="w-full max-w-2xl animate-in fade-in zoom-in-95 duration-500">
         {renderGameState()}
       </div>

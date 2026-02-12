@@ -69,6 +69,7 @@ export default function SignUpPage() {
         momoNumber: '', // Initialize empty MoMo number
         consecutiveWeeksPlayed: 0,
         lastPlayTimestamp: null,
+        hasCompletedOnboarding: false,
       };
 
       setDoc(userRef, userData)

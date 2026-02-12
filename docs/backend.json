@@ -79,6 +79,10 @@
           "type": "string",
           "format": "date-time",
           "description": "The timestamp of the last time the user played."
+        },
+        "hasCompletedOnboarding": {
+          "type": "boolean",
+          "description": "Whether the user has completed the onboarding tour."
         }
       },
       "required": ["uid", "displayName", "email"]
