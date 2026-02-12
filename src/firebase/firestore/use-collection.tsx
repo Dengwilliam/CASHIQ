@@ -33,7 +33,7 @@ export function useCollection<T = DocumentData>(q: Query<T> | null) {
         // Safely get path for error reporting
         const internalQuery = (q as any)._query;
         let path = 'unknown path';
-        if (internalQuery?.path?.segments) {
+        if (internalQuery?.path?.segments?.length > 0) {
             path = internalQuery.path.segments.join('/');
         } else if (internalQuery?.collectionGroup) {
             path = `collection group '${internalQuery.collectionGroup}'`;
