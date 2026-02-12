@@ -91,7 +91,7 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
           <span>Learn. Play. Earn.</span>
           <CircleDollarSign className="w-12 h-12 md:w-16 md:h-16 text-primary" />
         </CardTitle>
-        <CardDescription className="text-lg text-foreground/80 pt-2">
+        <CardDescription className="text-base sm:text-lg text-foreground/80 pt-2">
           Gamified financial literacy with weekly cash rewards
         </CardDescription>
       </CardHeader>
@@ -106,7 +106,7 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
                 <p className="text-sm text-muted-foreground mt-1">
                     Top 4 players win a share of the total weekly entry fees!
                 </p> 
-                <div className="grid grid-cols-4 gap-2 mt-3 text-center">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-center">
                     <div>
                         <p className="font-semibold text-lg text-primary/80">30%</p>
                         <p className="text-xs text-muted-foreground">1st Place</p>
