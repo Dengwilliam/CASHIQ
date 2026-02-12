@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Trophy, BarChart3, Info } from 'lucide-react';
 import AuthButton from '@/components/auth-button';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
 
 export default function SiteHeader() {
@@ -38,8 +38,11 @@ export default function SiteHeader() {
                         <SheetContent side="right">
                             <SheetHeader>
                                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                                <SheetDescription className="sr-only">
+                                    A list of navigation links for the site.
+                                </SheetDescription>
                             </SheetHeader>
-                            <nav className="flex flex-col gap-4">
+                            <nav className="flex flex-col gap-4 py-4">
                                 <Button variant="ghost" className="justify-start text-lg" asChild>
                                     <Link href="/leaderboard">
                                         <BarChart3 className="mr-2" />
