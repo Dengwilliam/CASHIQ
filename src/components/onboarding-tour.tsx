@@ -2,13 +2,14 @@
 
 import { useState, useEffect, type Dispatch, type SetStateAction } from 'react';
 import { useUser, useFirestore } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
@@ -72,13 +73,15 @@ export default function OnboardingTour({ open, onOpenChange }: OnboardingTourPro
     const dataToUpdate = { hasCompletedOnboarding: true };
 
     try {
-      await setDoc(userRef, dataToUpdate, { merge: true });
+      await updateDoc(userRef, dataToUpdate);
       toast({
         title: "You're all set!",
         description: 'Good luck in the quiz!',
       });
-      onOpenChange(false);
-    } catch (serverError) {
+      // Add a small delay to ensure state propagation before closing the dialog.
+      // This helps prevent race conditions where the UI might not update correctly.
+      setTimeout(() => onOpenChange(false), 150);
+    } catch (serverError: any) {
       const permissionError = new FirestorePermissionError({
           path: userRef.path,
           operation: 'update',
@@ -87,10 +90,9 @@ export default function OnboardingTour({ open, onOpenChange }: OnboardingTourPro
       errorEmitter.emit('permission-error', permissionError);
       toast({
         title: 'Error',
-        description: 'Could not save your progress. Please try again.',
+        description: serverError.message || 'Could not save your progress. Please try again.',
         variant: 'destructive',
       });
-    } finally {
       setIsFinishing(false);
     }
   };
@@ -99,7 +101,8 @@ export default function OnboardingTour({ open, onOpenChange }: OnboardingTourPro
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-bold">Quick Guide</DialogTitle>
+          <DialogTitle>Quick Guide</DialogTitle>
+          <DialogDescription className="sr-only">A quick guide to how the application works.</DialogDescription>
         </DialogHeader>
         <Carousel setApi={setApi} className="w-full">
           <CarouselContent>
@@ -110,7 +113,7 @@ export default function OnboardingTour({ open, onOpenChange }: OnboardingTourPro
                      <step.icon className="h-20 w-20 text-primary" />
                   </div>
                   <h3 className="text-xl font-semibold mt-4">{step.title}</h3>
-                  <p className="text-muted-foreground mt-2">{step.description}</p>
+                  <p className="text-muted-foreground mt-2 max-w-xs mx-auto">{step.description}</p>
                 </div>
               </CarouselItem>
             ))}
