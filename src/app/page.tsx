@@ -143,14 +143,15 @@ export default function Home() {
         let userProfileData: DocumentData | null = null;
         let existingBadges: string[] = [];
     
-        try {
-          const userDoc = await getDoc(userRef);
-          if (userDoc.exists()) {
+        const userDoc = await getDoc(userRef).catch(e => {
+            const permissionError = new FirestorePermissionError({ path: userRef.path, operation: 'get' });
+            errorEmitter.emit('permission-error', permissionError);
+            return null;
+        });
+
+        if (userDoc && userDoc.exists()) {
             userProfileData = userDoc.data();
             existingBadges = userProfileData?.badges || [];
-          }
-        } catch (e) {
-          console.error('Could not fetch user profile for badge check', e);
         }
     
         // --- BADGE LOGIC ---
@@ -162,21 +163,23 @@ export default function Home() {
           collection(firestore, 'scores'),
           where('userId', '==', user.uid)
         );
-        try {
-          const querySnapshot = await getDocs(scoresQuery);
-          if (querySnapshot.docs.length > 1) {
-              const allScores = querySnapshot.docs.map(doc => ({ score: doc.data().score, createdAt: doc.data().createdAt as Timestamp }));
-              allScores.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
-              const previousScores = allScores.slice(1);
-              if (previousScores.length > 0) {
-                  const previousHighScore = Math.max(...previousScores.map(s => s.score));
-                  if (score > previousHighScore) {
-                      newBadges.push('Comeback Kid');
-                  }
-              }
-          }
-        } catch (e) {
-          console.error('Could not check for past scores for Comeback Kid badge', e);
+
+        const querySnapshot = await getDocs(scoresQuery).catch(e => {
+            const permissionError = new FirestorePermissionError({ path: 'scores', operation: 'list' });
+            errorEmitter.emit('permission-error', permissionError);
+            return null;
+        });
+
+        if (querySnapshot && querySnapshot.docs.length > 1) {
+            const allScores = querySnapshot.docs.map(doc => ({ score: doc.data().score, createdAt: doc.data().createdAt as Timestamp }));
+            allScores.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+            const previousScores = allScores.slice(1);
+            if (previousScores.length > 0) {
+                const previousHighScore = Math.max(...previousScores.map(s => s.score));
+                if (score > previousHighScore) {
+                    newBadges.push('Comeback Kid');
+                }
+            }
         }
     
         let consecutiveWeeksPlayed = userProfileData?.consecutiveWeeksPlayed || 0;
@@ -215,7 +218,6 @@ export default function Home() {
           }
     
           updateDoc(userRef, updateData).catch(e => {
-              console.error('Failed to update user profile with badges/history', e);
                const permissionError = new FirestorePermissionError({
                   path: userRef.path,
                   operation: 'update',
@@ -241,7 +243,6 @@ export default function Home() {
         }
 
         await updateDoc(userRef, updateData).catch(e => {
-            console.error('Failed to update user coins and daily timestamp', e);
              const permissionError = new FirestorePermissionError({
                 path: userRef.path,
                 operation: 'update',
@@ -260,7 +261,7 @@ export default function Home() {
   }, [gameState, firestore, user, score, maxHotStreak, quizType, answeredQuestions, userProfile]);
 
   useEffect(() => {
-    const checkUserScore = async () => {
+    const checkUserScore = () => {
       if (!firestore || !user) {
         setHasPlayedThisWeek(null);
         setCheckingForPastScore(false);
@@ -277,8 +278,7 @@ export default function Home() {
         where('userId', '==', user.uid)
       );
 
-      try {
-        const querySnapshot = await getDocs(scoresQuery);
+      getDocs(scoresQuery).then(querySnapshot => {
         const scoresThisWeek = querySnapshot.docs.filter(doc => {
             const scoreData = doc.data();
             if (scoreData.createdAt) {
@@ -288,19 +288,23 @@ export default function Home() {
             return false;
         });
         setHasPlayedThisWeek(scoresThisWeek.length > 0);
-      } catch (error) {
-        console.error("Error checking for past score:", error);
+      }).catch(error => {
+        const permissionError = new FirestorePermissionError({
+            path: 'scores',
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
         setHasPlayedThisWeek(false);
-      } finally {
+      }).finally(() => {
         setCheckingForPastScore(false);
-      }
+      });
     };
 
     checkUserScore();
   }, [user, firestore, gameState]);
 
   useEffect(() => {
-    const checkUserPayment = async () => {
+    const checkUserPayment = () => {
         if (!firestore || !user) {
             setHasApprovedPaymentThisWeek(false);
             setIsCheckingPayment(false);
@@ -317,8 +321,7 @@ export default function Home() {
             where('status', '==', 'approved')
         );
 
-        try {
-            const querySnapshot = await getDocs(paymentsQuery);
+        getDocs(paymentsQuery).then(querySnapshot => {
             const approvedPaymentsThisWeek = querySnapshot.docs.filter(doc => {
                 const paymentData = doc.data();
                 if (paymentData.createdAt) {
@@ -328,12 +331,16 @@ export default function Home() {
                 return false;
             });
             setHasApprovedPaymentThisWeek(approvedPaymentsThisWeek.length > 0);
-        } catch (error) {
-            console.error("Error checking for approved payment:", error);
+        }).catch(error => {
+            const permissionError = new FirestorePermissionError({
+                path: `users/${user.uid}/payment-transactions`,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
             setHasApprovedPaymentThisWeek(false);
-        } finally {
+        }).finally(() => {
             setIsCheckingPayment(false);
-        }
+        });
     };
 
     checkUserPayment();
