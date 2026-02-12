@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collectionGroup, query, orderBy } from 'firebase/firestore';
+import { collectionGroup, query } from 'firebase/firestore';
 import type { Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -64,18 +64,28 @@ export default function TransactionsTable() {
 
     const transactionsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return query(collectionGroup(firestore, 'payment-transactions'), orderBy('createdAt', 'desc'));
+        // Removed `orderBy` to avoid needing a composite index. Sorting is now done client-side.
+        return query(collectionGroup(firestore, 'payment-transactions'));
     }, [firestore]);
 
     const { data: transactions, loading, error } = useCollection<PaymentTransaction>(transactionsQuery);
 
+    const sortedTransactions = useMemo(() => {
+        if (!transactions) return [];
+        return [...transactions].sort((a, b) => {
+            if (!a.createdAt) return 1; // Push items without a timestamp to the end
+            if (!b.createdAt) return -1;
+            return b.createdAt.toMillis() - a.createdAt.toMillis();
+        });
+    }, [transactions]);
+
     const filteredTransactions = useMemo(() => {
         return {
-            pending: transactions?.filter(t => t.status === 'pending') || [],
-            approved: transactions?.filter(t => t.status === 'approved') || [],
-            rejected: transactions?.filter(t => t.status === 'rejected') || [],
+            pending: sortedTransactions?.filter(t => t.status === 'pending') || [],
+            approved: sortedTransactions?.filter(t => t.status === 'approved') || [],
+            rejected: sortedTransactions?.filter(t => t.status === 'rejected') || [],
         };
-    }, [transactions]);
+    }, [sortedTransactions]);
 
     const handleUpdateStatus = async (userId: string, transactionId: string, status: 'approved' | 'rejected') => {
         if (!firestore) return;
@@ -101,9 +111,12 @@ export default function TransactionsTable() {
         return (
             <Card>
                 <CardContent className="p-6">
-                    <div className="text-center text-destructive p-4 border border-destructive/50 bg-destructive/10 rounded-md">
+                     <div className="text-center text-destructive p-4 border border-destructive/50 bg-destructive/10 rounded-md">
                         <p className="font-bold">Could not load transactions.</p>
-                        <p className="text-sm mt-2">{error.message}</p>
+                        <p className="text-sm mt-2">
+                            This can happen if the database query needs a special configuration. If you see a link in your browser's developer console to create an index, please click it and then refresh this page.
+                        </p>
+                        <p className="text-xs mt-2 font-mono">{error.message}</p>
                     </div>
                 </CardContent>
             </Card>
