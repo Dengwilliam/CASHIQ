@@ -23,7 +23,6 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import SiteHeader from '@/components/site-header';
 
 const formSchema = z.object({
   displayName: z.string().min(2, { message: 'Nickname must be at least 2 characters.' }),
@@ -105,9 +104,8 @@ export default function SignUpPage() {
   }
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
-      <SiteHeader />
-      <Card className="w-full max-w-sm bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
+    <div className="flex h-full w-full flex-col items-center justify-center p-4">
+      <Card className="w-full max-w-sm bg-card/80 backdrop-blur-lg border-white/5 shadow-xl">
         <CardHeader>
           <CardTitle>Create an Account</CardTitle>
           <CardDescription className="text-base">Enter your details to get started.</CardDescription>
@@ -167,6 +165,6 @@ export default function SignUpPage() {
           </p>
         </CardContent>
       </Card>
-    </main>
+    </div>
   );
 }

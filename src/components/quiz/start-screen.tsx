@@ -2,10 +2,9 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, BarChart, CircleDollarSign, Loader2, Wallet, Award, Coins } from 'lucide-react';
+import { ArrowRight, BarChart, CircleDollarSign, Loader2, Wallet, Award, Coins, Calendar, Trophy } from 'lucide-react';
 import type { User } from 'firebase/auth';
 import Link from 'next/link';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LivePrizePool from '@/components/live-prize-pool';
 
 type StartScreenProps = {
@@ -155,90 +154,85 @@ export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoin
   }
 
   return (
-    <Card className="bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl transition-all duration-300 hover:border-primary/40">
-      <CardHeader className="text-center pb-4">
-        <CardTitle className="text-4xl sm:text-5xl font-black text-foreground flex items-center justify-center flex-wrap gap-x-4">
-          <span>Learn. Play. Earn.</span>
-          <CircleDollarSign className="w-12 h-12 md:w-16 md:h-16 text-primary" />
-        </CardTitle>
-        <CardDescription className="text-base sm:text-lg text-foreground/80 pt-2">
+    <>
+      <div className="text-center">
+        <h1 className="text-4xl sm:text-5xl font-black text-foreground tracking-tight">
+          Learn. Play. Earn.
+        </h1>
+        <p className="text-base sm:text-lg text-foreground/80 pt-2 max-w-2xl mx-auto">
           Gamified financial literacy with weekly cash rewards and daily coin prizes.
-        </CardDescription>
+        </p>
         {user && (
-            <div className="text-center text-base pt-4">
-              Welcome, <span className="font-bold text-primary">{user.displayName}!</span>
+            <div className="text-base pt-4">
+              Welcome back, <span className="font-bold text-primary">{user.displayName}!</span>
             </div>
         )}
-      </CardHeader>
-      
-      <div className="px-2 sm:px-6">
-        <LivePrizePool />
       </div>
-      
-      <CardContent className="p-2 sm:p-6 pt-0">
-        <Tabs defaultValue="weekly" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="weekly">Weekly Challenge</TabsTrigger>
-                <TabsTrigger value="daily">Daily Quiz</TabsTrigger>
-            </TabsList>
-            <TabsContent value="weekly">
-                <form onSubmit={handleWeeklySubmit}>
-                    <CardContent className="space-y-4 pt-6">
-                        <div className="text-center p-4 bg-secondary rounded-lg">
-                            <p className="text-sm text-muted-foreground">Entry Fee</p>
-                            <p className="text-2xl font-bold text-primary">25,000 SSP</p>
-                        </div>
-                        <div className="text-center p-4 border border-dashed border-primary/50 rounded-lg">
-                            <h3 className="text-lg font-semibold text-primary">Weekly Competition!</h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Top 4 players win a share of the total weekly entry fees!
-                            </p> 
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-                                <div className="p-3 bg-primary/10 rounded-lg text-center border border-primary/20">
-                                    <p className="font-black text-xl text-primary">1st</p>
-                                    <p className="text-sm font-semibold text-foreground">30%</p>
-                                </div>
-                                <div className="p-3 bg-secondary rounded-lg text-center">
-                                    <p className="font-black text-xl text-primary/80">2nd</p>
-                                    <p className="text-sm font-semibold text-foreground">20%</p>
-                                </div>
-                                <div className="p-3 bg-secondary rounded-lg text-center">
-                                    <p className="font-black text-xl text-primary/80">3rd</p>
-                                    <p className="text-sm font-semibold text-foreground">10%</p>
-                                </div>
-                                <div className="p-3 bg-secondary rounded-lg text-center">
-                                    <p className="font-black text-xl text-primary/80">4th</p>
-                                    <p className="text-sm font-semibold text-foreground">5%</p>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                    <CardFooter>
-                      {renderWeeklyFooter()}
-                    </CardFooter>
-                </form>
-            </TabsContent>
-            <TabsContent value="daily">
-                 <form onSubmit={handleDailySubmit}>
-                    <CardContent className="space-y-4 pt-6">
-                       <div className="text-center p-4 bg-secondary rounded-lg">
-                            <p className="text-sm text-muted-foreground">Entry Fee</p>
-                            <p className="text-2xl font-bold text-primary">FREE</p>
-                        </div>
-                         <div className="text-center p-4 border border-dashed border-accent/50 rounded-lg">
-                            <h3 className="text-lg font-semibold text-accent flex items-center justify-center gap-2"><Award /> Daily Prize</h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                A quick 5-question quiz to test your knowledge and earn coins every day!
-                            </p>
-                        </div>
-                    </CardContent>
-                    <CardFooter>
-                      {renderDailyFooter()}
-                    </CardFooter>
-                </form>
-            </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8 w-full">
+        {/* Weekly Challenge Card */}
+        <Card className="bg-card/80 backdrop-blur-lg border-white/5 shadow-xl flex flex-col">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-3"><Trophy className="text-primary"/> Weekly Challenge</CardTitle>
+                <CardDescription>Top 4 players win a share of the total weekly prize pool!</CardDescription>
+            </CardHeader>
+            <CardContent className="flex-1 space-y-4">
+                <LivePrizePool />
+                <div className="text-center p-4 bg-secondary rounded-lg">
+                    <p className="text-sm text-muted-foreground">Entry Fee</p>
+                    <p className="text-2xl font-bold text-primary">25,000 SSP or 1,000 Coins</p>
+                </div>
+                 <div className="grid grid-cols-4 gap-3">
+                    <div className="p-3 bg-primary/10 rounded-lg text-center border border-primary/20">
+                        <p className="font-black text-lg text-primary">1st</p>
+                        <p className="text-xs font-semibold text-foreground">30%</p>
+                    </div>
+                    <div className="p-3 bg-secondary rounded-lg text-center">
+                        <p className="font-black text-lg text-primary/80">2nd</p>
+                        <p className="text-xs font-semibold text-foreground">20%</p>
+                    </div>
+                    <div className="p-3 bg-secondary rounded-lg text-center">
+                        <p className="font-black text-lg text-primary/80">3rd</p>
+                        <p className="text-xs font-semibold text-foreground">10%</p>
+                    </div>
+                    <div className="p-3 bg-secondary rounded-lg text-center">
+                        <p className="font-black text-lg text-primary/80">4th</p>
+                        <p className="text-xs font-semibold text-foreground">5%</p>
+                    </div>
+                </div>
+            </CardContent>
+            <CardFooter>
+              <form onSubmit={handleWeeklySubmit} className="w-full">
+                {renderWeeklyFooter()}
+              </form>
+            </CardFooter>
+        </Card>
+
+        {/* Daily Quiz Card */}
+        <Card className="bg-card/80 backdrop-blur-lg border-white/5 shadow-xl flex flex-col">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-3"><Calendar className="text-accent" /> Daily Quiz</CardTitle>
+                <CardDescription>A quick 5-question quiz to test your knowledge and earn coins every day!</CardDescription>
+            </CardHeader>
+            <CardContent className="flex-1 space-y-4">
+                <div className="text-center p-4 bg-secondary rounded-lg">
+                    <p className="text-sm text-muted-foreground">Entry Fee</p>
+                    <p className="text-2xl font-bold text-primary">FREE</p>
+                </div>
+                 <div className="text-center p-4 border border-dashed border-accent/50 rounded-lg flex-1 flex flex-col justify-center">
+                    <h3 className="text-lg font-semibold text-accent flex items-center justify-center gap-2"><Award /> Daily Prize</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        Earn <strong className="text-foreground">5 coins</strong> for every correct answer. Use coins to enter the weekly challenge!
+                    </p>
+                </div>
+            </CardContent>
+            <CardFooter>
+              <form onSubmit={handleDailySubmit} className="w-full">
+                {renderDailyFooter()}
+              </form>
+            </CardFooter>
+        </Card>
+      </div>
+    </>
   );
 }

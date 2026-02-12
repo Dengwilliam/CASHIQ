@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseProvider } from '@/firebase/provider';
 import SiteFooter from '@/components/site-footer';
+import SiteHeader from '@/components/site-header';
 
 export const metadata: Metadata = {
   title: 'CapitalQuiz Challenge',
@@ -21,11 +22,12 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased h-full flex flex-col">
+      <body className="font-body antialiased flex flex-col min-h-screen">
         <FirebaseProvider>
-          <div className="flex-1">
+          <SiteHeader />
+          <main className="flex-1 pt-16">
             {children}
-          </div>
+          </main>
           <SiteFooter />
           <Toaster />
         </FirebaseProvider>

@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { startOfWeek, endOfWeek, subWeeks, addWeeks, isSameWeek } from 'date-fns';
 
-import SiteHeader from '@/components/site-header';
 import LeaderboardTable from '@/components/leaderboard/leaderboard-table';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import WinnerNotification from '@/components/leaderboard/winner-notification';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import LastWeeksWinners from '@/components/leaderboard/last-weeks-winners';
 
 export default function LeaderboardPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -29,25 +29,27 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
+    <div className="container mx-auto px-4 py-8 md:px-6 w-full max-w-4xl animate-in fade-in-50 duration-500 space-y-8">
       <WinnerNotification />
-      <SiteHeader />
-      <div className="w-full max-w-4xl animate-in fade-in zoom-in-95 duration-500 mt-24 space-y-8">
-        <div className="flex justify-between items-center">
-            <Button variant="outline" onClick={handlePreviousWeek}>
-                <ChevronLeft className="mr-2 h-4 w-4" /> Previous Week
+      <LastWeeksWinners />
+      
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h1 className="text-3xl font-bold tracking-tight">Leaderboard</h1>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handlePreviousWeek}>
+                <ChevronLeft className="mr-2 h-4 w-4" /> Previous
             </Button>
-            <Button variant="outline" onClick={handleNextWeek} disabled={isCurrentWeek}>
-                Next Week <ChevronRight className="ml-2 h-4 w-4" />
+            <Button variant="outline" size="sm" onClick={handleNextWeek} disabled={isCurrentWeek}>
+                Next <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
-        </div>
-        <LeaderboardTable week={selectedWeek} />
+          </div>
       </div>
+      <LeaderboardTable week={selectedWeek} />
       <div className="mt-8 text-center">
-        <Button asChild>
-            <Link href="/">Play Again</Link>
+        <Button asChild size="lg">
+            <Link href="/">Play the Quiz!</Link>
         </Button>
       </div>
-    </main>
+    </div>
   );
 }

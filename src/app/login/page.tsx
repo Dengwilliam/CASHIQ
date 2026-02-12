@@ -20,7 +20,6 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import SiteHeader from '@/components/site-header';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -57,9 +56,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
-      <SiteHeader />
-      <Card className="w-full max-w-sm bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
+    <div className="flex h-full w-full flex-col items-center justify-center p-4">
+      <Card className="w-full max-w-sm bg-card/80 backdrop-blur-lg border-white/5 shadow-xl">
         <CardHeader>
           <CardTitle>Log In</CardTitle>
           <CardDescription className="text-base">Enter your credentials to access your account.</CardDescription>
@@ -114,6 +112,6 @@ export default function LoginPage() {
           </p>
         </CardContent>
       </Card>
-    </main>
+    </div>
   );
 }

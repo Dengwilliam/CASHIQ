@@ -1,7 +1,6 @@
 'use client';
 import { useMemo, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import SiteHeader from '@/components/site-header';
 import { collection, query, where, doc, setDoc } from 'firebase/firestore';
 import type { Timestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -13,8 +12,6 @@ import { Award, Star, TrendingUp, HelpCircle, Landmark, BrainCircuit, Flame, Tar
 import { useDoc } from '@/firebase/firestore/use-doc';
 import {
   ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from 'recharts';
 import { useForm } from 'react-hook-form';
@@ -51,7 +48,7 @@ const badgeIcons: { [key: string]: React.ElementType } = {
 function ProfileSkeleton() {
     return (
         <div className="space-y-8">
-            <Card className="bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
+            <Card className="bg-card/80 backdrop-blur-lg border-white/5 shadow-xl">
                 <CardHeader className="items-center text-center">
                     <Skeleton className="h-24 w-24 rounded-full" />
                     <Skeleton className="h-8 w-48 mt-4" />
@@ -167,200 +164,193 @@ export default function ProfilePage() {
     }
 
 
-    if (userLoading) {
+    if (userLoading || profileLoading) {
         return (
-             <main className="flex min-h-screen w-full flex-col items-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
-                <SiteHeader />
-                 <div className="w-full max-w-4xl animate-in fade-in zoom-in-95 duration-500 mt-24">
-                    <ProfileSkeleton />
-                </div>
-            </main>
+             <div className="container mx-auto px-4 py-8 md:px-6 w-full max-w-4xl animate-in fade-in-50 duration-500">
+                <ProfileSkeleton />
+            </div>
         )
     }
 
     if (!user) {
         return (
-             <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
-                <SiteHeader />
+             <div className="flex h-full flex-col items-center justify-center">
                 <p>Please log in to view your profile.</p>
-            </main>
+            </div>
         )
     }
 
     return (
-        <main className="flex min-h-screen w-full flex-col items-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
-            <SiteHeader />
-            <div className="w-full max-w-4xl animate-in fade-in zoom-in-95 duration-500 mt-24">
-                <Card className="bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
-                    <CardHeader className="items-center text-center">
-                        <Avatar className="h-24 w-24 mb-4 border-2 border-primary">
-                            <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? ''} />
-                            <AvatarFallback className="text-3xl">
-                                {user.displayName?.charAt(0) ?? user.email?.charAt(0)}
-                            </AvatarFallback>
-                        </Avatar>
-                        <CardTitle className="text-3xl">{user.displayName}</CardTitle>
-                        <CardDescription>{user.email}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-8">
-                         <div>
-                            <h2 className="text-2xl font-bold mb-4 text-center">My Stats</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <Card>
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">Highest Score</CardTitle>
-                                        <Star className="h-4 w-4 text-muted-foreground" />
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold">{scoresLoading ? <Skeleton className="h-8 w-16" /> : `${highestScore}`}</div>
-                                    </CardContent>
-                                </Card>
-                                 <Card>
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-                                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold">{scoresLoading ? <Skeleton className="h-8 w-16" /> : `${averageScore}`}</div>
-                                    </CardContent>
-                                </Card>
-                                 <Card>
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">Quizzes Played</CardTitle>
-                                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold">{scoresLoading ? <Skeleton className="h-8 w-16" /> : totalQuizzes}</div>
-                                    </CardContent>
-                                </Card>
-                                <Card>
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">Coin Balance</CardTitle>
-                                        <Banknote className="h-4 w-4 text-muted-foreground" />
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold">{profileLoading ? <Skeleton className="h-8 w-16" /> : userProfile?.coins ?? 0}</div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </div>
-
-                        {profileLoading ? (
-                            <Skeleton className="h-24 w-full" />
-                        ) : (userProfile?.badges && userProfile.badges.length > 0) && (
-                             <div>
-                                <h2 className="text-2xl font-bold mb-4 text-center">My Badges</h2>
-                                <div className="flex flex-wrap justify-center gap-4 mb-8">
-                                    {userProfile.badges.map(badge => {
-                                        const Icon = badgeIcons[badge] || Award;
-                                        return (
-                                            <div key={badge} className="flex flex-col items-center gap-2 p-4 bg-accent/20 rounded-lg border border-accent/50 w-32 text-center transition-all hover:bg-accent/30 hover:scale-105">
-                                                <Icon className="h-8 w-8 text-accent" />
-                                                <p className="font-semibold text-sm text-accent-foreground">{badge}</p>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-                        )}
-
-                        <div>
-                            <h2 className="text-2xl font-bold mb-4 text-center">Payout Information</h2>
+        <div className="container mx-auto px-4 py-8 md:px-6 w-full max-w-5xl animate-in fade-in-50 duration-500">
+            <Card className="bg-card/80 backdrop-blur-lg border-white/5 shadow-xl">
+                <CardHeader className="items-center text-center">
+                    <Avatar className="h-24 w-24 mb-4 border-2 border-primary">
+                        <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? ''} />
+                        <AvatarFallback className="text-3xl">
+                            {user.displayName?.charAt(0) ?? user.email?.charAt(0)}
+                        </AvatarFallback>
+                    </Avatar>
+                    <CardTitle className="text-3xl">{user.displayName}</CardTitle>
+                    <CardDescription>{user.email}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                     <div>
+                        <h2 className="text-2xl font-bold mb-4 text-center">My Stats</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-3 text-xl"><Landmark /> My MoMo Number</CardTitle>
-                                    <CardDescription>This is the number where your winnings will be sent. Please ensure it is correct.</CardDescription>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Highest Score</CardTitle>
+                                    <Star className="h-4 w-4 text-muted-foreground" />
                                 </CardHeader>
                                 <CardContent>
-                                    <Form {...payoutForm}>
-                                        <form onSubmit={payoutForm.handleSubmit(onPayoutSubmit)} className="space-y-4">
-                                            <FormField
-                                                control={payoutForm.control}
-                                                name="momoNumber"
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel>MTN MoMo Number</FormLabel>
-                                                        <FormControl>
-                                                            <Input placeholder="e.g., 092xxxxxxx" {...field} />
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                            <Button type="submit" disabled={payoutForm.formState.isSubmitting}>
-                                                {payoutForm.formState.isSubmitting ? 'Saving...' : 'Save Payout Info'}
-                                            </Button>
-                                        </form>
-                                    </Form>
+                                    <div className="text-2xl font-bold">{scoresLoading ? <Skeleton className="h-8 w-16" /> : `${highestScore}`}</div>
+                                </CardContent>
+                            </Card>
+                             <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+                                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{scoresLoading ? <Skeleton className="h-8 w-16" /> : `${averageScore}`}</div>
+                                </CardContent>
+                            </Card>
+                             <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Quizzes Played</CardTitle>
+                                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{scoresLoading ? <Skeleton className="h-8 w-16" /> : totalQuizzes}</div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Coin Balance</CardTitle>
+                                    <Banknote className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{profileLoading ? <Skeleton className="h-8 w-16" /> : userProfile?.coins ?? 0}</div>
                                 </CardContent>
                             </Card>
                         </div>
-                        
-                        {(scoresLoading || chartData.length > 0) && (
-                            <div>
-                                <h2 className="text-2xl font-bold mb-4 text-center">Performance Over Time</h2>
-                                <Card className="p-2 pt-4">
-                                    {scoresLoading ? (
-                                        <Skeleton className="h-64 w-full" />
-                                    ) : (
-                                        <ChartContainer config={{ score: { label: 'Score', color: 'hsl(var(--primary))' } }} className="h-64 w-full">
-                                            <LineChart accessibilityLayer data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
-                                                <CartesianGrid vertical={false} />
-                                                <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-                                                <YAxis domain={[0, 100]} tickLine={false} axisLine={false} tickMargin={8} />
-                                                <RechartsTooltip 
-                                                    contentStyle={{
-                                                        backgroundColor: 'hsl(var(--card))',
-                                                        borderColor: 'hsl(var(--border))'
-                                                    }}
-                                                    labelStyle={{ color: 'hsl(var(--foreground))' }}
-                                                    itemStyle={{ color: 'hsl(var(--primary))' }}
-                                                />
-                                                <Line dataKey="score" type="monotone" stroke="hsl(var(--primary))" strokeWidth={2} dot={true} />
-                                            </LineChart>
-                                        </ChartContainer>
-                                    )}
-                                </Card>
-                            </div>
-                        )}
+                    </div>
 
-                        <div>
-                            <h2 className="text-2xl font-bold mb-4 text-center">Quiz History</h2>
-                            {scoresLoading ? (
-                                 <div className="space-y-2">
-                                    {[...Array(3)].map((_, i) => (
-                                        <div key={i} className="flex items-center justify-between p-4 bg-card rounded-md">
-                                            <Skeleton className="h-5 w-1/3" />
-                                            <Skeleton className="h-5 w-1/4" />
+                    {profileLoading ? (
+                        <Skeleton className="h-24 w-full" />
+                    ) : (userProfile?.badges && userProfile.badges.length > 0) && (
+                         <div>
+                            <h2 className="text-2xl font-bold mb-4 text-center">My Badges</h2>
+                            <div className="flex flex-wrap justify-center gap-4 mb-8">
+                                {userProfile.badges.map(badge => {
+                                    const Icon = badgeIcons[badge] || Award;
+                                    return (
+                                        <div key={badge} className="flex flex-col items-center gap-2 p-4 bg-accent/20 rounded-lg border border-accent/50 w-32 text-center transition-all hover:bg-accent/30 hover:scale-105">
+                                            <Icon className="h-8 w-8 text-accent" />
+                                            <p className="font-semibold text-sm text-accent-foreground">{badge}</p>
                                         </div>
-                                    ))}
-                                </div>
-                            ) : sortedScores.length > 0 ? (
-                                <Card>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead className="text-right">Score</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {sortedScores.map(score => (
-                                            <TableRow key={score.id}>
-                                                <TableCell>{format(score.createdAt.toDate(), 'PPP')}</TableCell>
-                                                <TableCell className="text-right font-bold text-primary">{score.score}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                                </Card>
-                            ) : (
-                                <p className="text-muted-foreground text-center py-4">You haven't played any quizzes yet.</p>
-                            )}
+                                    )
+                                })}
+                            </div>
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </main>
+                    )}
+
+                    <div>
+                        <h2 className="text-2xl font-bold mb-4 text-center">Payout Information</h2>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-3 text-xl"><Landmark /> My MoMo Number</CardTitle>
+                                <CardDescription>This is the number where your winnings will be sent. Please ensure it is correct.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Form {...payoutForm}>
+                                    <form onSubmit={payoutForm.handleSubmit(onPayoutSubmit)} className="space-y-4">
+                                        <FormField
+                                            control={payoutForm.control}
+                                            name="momoNumber"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>MTN MoMo Number</FormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="e.g., 092xxxxxxx" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <Button type="submit" disabled={payoutForm.formState.isSubmitting}>
+                                            {payoutForm.formState.isSubmitting ? 'Saving...' : 'Save Payout Info'}
+                                        </Button>
+                                    </form>
+                                </Form>
+                            </CardContent>
+                        </Card>
+                    </div>
+                    
+                    {(scoresLoading || chartData.length > 0) && (
+                        <div>
+                            <h2 className="text-2xl font-bold mb-4 text-center">Performance Over Time</h2>
+                            <Card className="p-2 pt-4">
+                                {scoresLoading ? (
+                                    <Skeleton className="h-64 w-full" />
+                                ) : (
+                                    <ChartContainer config={{ score: { label: 'Score', color: 'hsl(var(--primary))' } }} className="h-64 w-full">
+                                        <LineChart accessibilityLayer data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+                                            <CartesianGrid vertical={false} />
+                                            <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+                                            <YAxis domain={[0, 100]} tickLine={false} axisLine={false} tickMargin={8} />
+                                            <RechartsTooltip 
+                                                contentStyle={{
+                                                    backgroundColor: 'hsl(var(--card))',
+                                                    borderColor: 'hsl(var(--border))'
+                                                }}
+                                                labelStyle={{ color: 'hsl(var(--foreground))' }}
+                                                itemStyle={{ color: 'hsl(var(--primary))' }}
+                                            />
+                                            <Line dataKey="score" type="monotone" stroke="hsl(var(--primary))" strokeWidth={2} dot={true} />
+                                        </LineChart>
+                                    </ChartContainer>
+                                )}
+                            </Card>
+                        </div>
+                    )}
+
+                    <div>
+                        <h2 className="text-2xl font-bold mb-4 text-center">Quiz History</h2>
+                        {scoresLoading ? (
+                             <div className="space-y-2">
+                                {[...Array(3)].map((_, i) => (
+                                    <div key={i} className="flex items-center justify-between p-4 bg-card rounded-md">
+                                        <Skeleton className="h-5 w-1/3" />
+                                        <Skeleton className="h-5 w-1/4" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : sortedScores.length > 0 ? (
+                            <Card>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead className="text-right">Score</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {sortedScores.map(score => (
+                                        <TableRow key={score.id}>
+                                            <TableCell>{format(score.createdAt.toDate(), 'PPP')}</TableCell>
+                                            <TableCell className="text-right font-bold text-primary">{score.score}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                            </Card>
+                        ) : (
+                            <p className="text-muted-foreground text-center py-4">You haven't played any quizzes yet.</p>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
     );
 }

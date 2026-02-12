@@ -11,7 +11,6 @@ import type { Question, Answer } from "@/lib/questions";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { saveScore } from "@/lib/scores";
-import SiteHeader from "@/components/site-header";
 import { generateQuiz } from "@/ai/flows/generate-quiz-flow";
 import { generateDailyQuiz } from "@/ai/flows/generate-daily-quiz-flow";
 import { generateExplanation } from "@/ai/flows/generate-explanation-flow";
@@ -617,12 +616,11 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4 sm:p-6 md:p-8 relative overflow-hidden">
-      <SiteHeader />
+    <div className="flex h-full w-full flex-col items-center justify-center p-4">
       {user && <OnboardingTour open={showOnboarding} onOpenChange={setShowOnboarding} />}
-      <div className="w-full max-w-2xl animate-in fade-in zoom-in-95 duration-500">
+      <div className="w-full max-w-4xl animate-in fade-in zoom-in-95 duration-500">
         {renderGameState()}
       </div>
-    </main>
+    </div>
   );
 }
