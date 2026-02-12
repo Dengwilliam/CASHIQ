@@ -509,7 +509,9 @@ export default function Home() {
     const isCorrect = answer.isCorrect;
     const currentQuestion = questions[currentQuestionIndex];
     if (isCorrect) {
-      setScore((prev) => prev + 10);
+      if (quizType === 'weekly') {
+        setScore((prev) => prev + 5);
+      }
       const newHotStreak = hotStreak + 1;
       setHotStreak(newHotStreak);
       setMaxHotStreak(prevMax => Math.max(prevMax, newHotStreak));

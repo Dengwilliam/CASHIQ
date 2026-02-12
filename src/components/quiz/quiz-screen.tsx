@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import type { Question, Answer } from '@/lib/questions';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type QuizScreenProps = {
@@ -24,6 +24,7 @@ export default function QuizScreen({ question, onAnswer, onTimeout, score, quest
   const [selectedAnswer, setSelectedAnswer] = useState<Answer | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const isWeeklyQuiz = totalQuestions > 5;
 
   useEffect(() => {
     setTimeLeft(TIME_PER_QUESTION);
@@ -82,7 +83,10 @@ export default function QuizScreen({ question, onAnswer, onTimeout, score, quest
     <Card className="w-full bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
       <CardHeader>
         <div className="flex justify-between items-center mb-4">
-          <p className="text-sm text-muted-foreground">Score: <span className="font-bold text-primary">{score}</span></p>
+            <div className="text-sm text-muted-foreground flex items-center">
+              {isWeeklyQuiz ? "Score: " : <Coins className="h-4 w-4 mr-1 text-accent" />}
+              <span className="font-bold text-primary">{score}</span>
+            </div>
            <div className="flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-sm font-medium text-primary">
             <Clock className="h-4 w-4" />
             <span>{timeLeft}s</span>
