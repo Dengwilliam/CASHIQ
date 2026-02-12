@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { Crown } from 'lucide-react';
 
 type ScoreEntry = {
   id: string;
@@ -15,6 +16,7 @@ type ScoreEntry = {
   score: number;
   createdAt: Timestamp;
   userId: string;
+  rank?: number;
 };
 
 const prizeDistribution: { [key: number]: number } = {
@@ -98,15 +100,18 @@ export default function LeaderboardTable({ week }: LeaderboardTableProps) {
   };
 
   const getRankIcon = (rank: number) => {
-    const iconBaseClass = "flex items-center justify-center h-7 w-7 rounded-md font-bold text-lg";
-    if (rank <= 4) {
-        return <div className={`${iconBaseClass} bg-primary text-primary-foreground`}>{rank}</div>;
+    const colors = ['text-yellow-400', 'text-slate-400', 'text-orange-400']; // Gold, Silver, Bronze
+    if (rank <= 3) {
+        return <Crown className={`h-6 w-6 ${colors[rank-1]}`} />;
     }
-    return <div className="flex items-center justify-center h-7 w-7">{rank}</div>;
+    if (rank <= 4) { // Special style for 4th place
+        return <div className="flex items-center justify-center h-7 w-7 rounded-md bg-primary/20 font-bold text-primary">{rank}</div>;
+    }
+    return <div className="flex items-center justify-center h-7 w-7 text-muted-foreground">{rank}</div>;
   };
 
   return (
-    <Card className="bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
+    <Card className="bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl transition-all duration-300 hover:border-primary/40">
       <CardHeader className="text-center">
         <CardTitle className="text-3xl font-bold">Weekly Leaderboard</CardTitle>
         <CardDescription className="text-base">
@@ -130,29 +135,29 @@ export default function LeaderboardTable({ week }: LeaderboardTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[80px] text-foreground/80 uppercase tracking-wider text-xs">Rank</TableHead>
+                <TableHead className="w-[80px] text-foreground/80 uppercase tracking-wider text-xs text-center">Rank</TableHead>
                 <TableHead className="text-foreground/80 uppercase tracking-wider text-xs">Player</TableHead>
                 <TableHead className="text-right text-foreground/80 uppercase tracking-wider text-xs">Score</TableHead>
                 <TableHead className="text-right text-foreground/80 uppercase tracking-wider text-xs">Prize Share</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {topScores.map((score, index) => (
+              {topScores.map((score) => (
                 <TableRow 
                   key={score.id} 
                   className={cn(
-                    index < 4 ? 'font-bold' : '',
+                    score.rank && score.rank <= 4 ? 'font-semibold' : '',
                     user && score.userId === user.uid && 'bg-primary/10'
                   )}
                 >
                   <TableCell>
                     <div className="flex items-center justify-center">
-                      {getRankIcon(index + 1)}
+                      {getRankIcon(score.rank || 0)}
                     </div>
                   </TableCell>
                   <TableCell>{score.playerName}</TableCell>
                   <TableCell className="text-right font-bold">{score.score}</TableCell>
-                  <TableCell className="text-right font-semibold text-primary">{getPrizePercentage(index + 1)}</TableCell>
+                  <TableCell className="text-right font-semibold text-primary">{getPrizePercentage(score.rank || 0)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -171,12 +176,12 @@ export default function LeaderboardTable({ week }: LeaderboardTableProps) {
                         <TableRow className="border-none hover:bg-transparent">
                              <TableCell className="w-[80px] p-0">
                                 <div className="flex items-center justify-center">
-                                    {getRankIcon(currentUserRank.rank)}
+                                    {getRankIcon(currentUserRank.rank || 0)}
                                 </div>
                             </TableCell>
                             <TableCell className="p-0 font-bold">{currentUserRank.playerName}</TableCell>
                             <TableCell className="text-right p-0 font-bold">{currentUserRank.score}</TableCell>
-                            <TableCell className="text-right p-0 font-semibold text-primary">{getPrizePercentage(currentUserRank.rank)}</TableCell>
+                            <TableCell className="text-right p-0 font-semibold text-primary">{getPrizePercentage(currentUserRank.rank || 0)}</TableCell>
                         </TableRow>
                     </TableBody>
                 </Table>
