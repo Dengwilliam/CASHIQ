@@ -131,6 +131,7 @@ export default function LeaderboardTable() {
               <TableRow>
                 <TableHead className="w-[80px]">Rank</TableHead>
                 <TableHead>Player</TableHead>
+                <TableHead className="text-right">Score</TableHead>
                 <TableHead className="text-right">Prize Share</TableHead>
               </TableRow>
             </TableHeader>
@@ -149,6 +150,7 @@ export default function LeaderboardTable() {
                     </div>
                   </TableCell>
                   <TableCell>{score.playerName}</TableCell>
+                  <TableCell className="text-right font-bold">{score.score}</TableCell>
                   <TableCell className="text-right font-semibold text-primary">{getPrizePercentage(index + 1)}</TableCell>
                 </TableRow>
               ))}
@@ -172,6 +174,7 @@ export default function LeaderboardTable() {
                                 </div>
                             </TableCell>
                             <TableCell className="p-0 font-bold">{currentUserRank.playerName}</TableCell>
+                            <TableCell className="text-right p-0 font-bold">{currentUserRank.score}</TableCell>
                             <TableCell className="text-right p-0 font-semibold text-primary">{getPrizePercentage(currentUserRank.rank)}</TableCell>
                         </TableRow>
                     </TableBody>
