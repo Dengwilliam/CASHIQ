@@ -122,6 +122,11 @@
           "type": "string",
           "format": "uri",
           "description": "Data URI of the uploaded screenshot for payment proof."
+        },
+        "entryType": {
+          "type": "string",
+          "description": "The method used for the entry fee.",
+          "enum": ["cash", "coins"]
         }
       },
       "required": ["userId", "momoTransactionId", "amount", "status", "createdAt", "playerName"]

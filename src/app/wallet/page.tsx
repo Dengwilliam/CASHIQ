@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { collection, query, addDoc, serverTimestamp, type Timestamp } from 'firebase/firestore';
-import { Badge, FileText, Send, Landmark, Image as ImageIcon } from 'lucide-react';
+import { Badge, FileText, Send, Landmark, Image as ImageIcon, Coins } from 'lucide-react';
 
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -44,6 +44,7 @@ type PaymentTransaction = {
     status: 'pending' | 'approved' | 'rejected';
     createdAt: Timestamp;
     screenshotUrl?: string;
+    entryType?: 'coins' | 'cash';
 }
 
 function HistorySkeleton() {
@@ -155,6 +156,7 @@ export default function WalletPage() {
             amount: 25000,
             status: 'pending' as const,
             screenshotUrl: screenshotUrl,
+            entryType: 'cash' as const,
         };
 
         const collectionRef = collection(firestore, 'users', user.uid, 'payment-transactions');
@@ -307,11 +309,20 @@ export default function WalletPage() {
                                                         View
                                                     </a>
                                                 ) : (
-                                                    'N/A'
+                                                    tx.entryType === 'coins' ? 'N/A' : 'Missing'
                                                 )}
                                            </TableCell>
                                            <TableCell>{tx.createdAt ? format(tx.createdAt.toDate(), 'PPP p') : 'Processing...'}</TableCell>
-                                           <TableCell className="font-semibold">{tx.amount.toLocaleString()} SSP</TableCell>
+                                           <TableCell className="font-semibold">
+                                                {tx.entryType === 'coins' ? (
+                                                    <span className="flex items-center gap-2 text-muted-foreground">
+                                                        <Coins className="h-4 w-4 text-accent" />
+                                                        Coin Entry
+                                                    </span>
+                                                ) : (
+                                                    `${tx.amount.toLocaleString()} SSP`
+                                                )}
+                                            </TableCell>
                                            <TableCell className="text-right">{getStatusBadge(tx.status)}</TableCell>
                                        </TableRow>
                                    ))}

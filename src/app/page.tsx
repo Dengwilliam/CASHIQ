@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { collection, query, where, getDocs, type Timestamp, doc, updateDoc, arrayUnion, getDoc, serverTimestamp, type DocumentData, increment } from 'firebase/firestore';
+import { collection, query, where, getDocs, type Timestamp, doc, updateDoc, arrayUnion, getDoc, serverTimestamp, type DocumentData, increment, addDoc } from 'firebase/firestore';
 import { startOfWeek, endOfWeek, isMonday, isSameWeek, subWeeks, isToday } from 'date-fns';
 
 import StartScreen from "@/components/quiz/start-screen";
@@ -36,6 +36,8 @@ const WEEKLY_QUESTIONS_PER_GAME = 20;
 const DAILY_QUESTIONS_PER_GAME = 5;
 const COINS_PER_CORRECT_ANSWER = 5;
 const TAB_SWITCH_PENALTY = 5;
+const WEEKLY_ENTRY_COIN_COST = 1000;
+
 
 // Utility to shuffle an array
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -55,6 +57,7 @@ export default function Home() {
   const [hasPlayedDailyToday, setHasPlayedDailyToday] = useState<boolean | null>(null);
   const [isCheckingDaily, setIsCheckingDaily] = useState(true);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+  const [isPayingWithCoins, setIsPayingWithCoins] = useState(false);
   const [newlyAwardedBadges, setNewlyAwardedBadges] = useState<string[]>([]);
   const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
   const [hotStreak, setHotStreak] = useState(0);
@@ -451,6 +454,57 @@ export default function Home() {
     }
   };
 
+  const handlePayWithCoins = () => {
+    if (!firestore || !user || !userProfile) return;
+
+    if ((userProfile.coins ?? 0) < WEEKLY_ENTRY_COIN_COST) {
+        toast({
+            title: 'Not enough coins',
+            description: `You need ${WEEKLY_ENTRY_COIN_COST} coins to enter the weekly challenge.`,
+            variant: 'destructive',
+        });
+        return;
+    }
+
+    setIsPayingWithCoins(true);
+    const userRef = doc(firestore, 'users', user.uid);
+    
+    updateDoc(userRef, { coins: increment(-WEEKLY_ENTRY_COIN_COST) })
+        .then(() => {
+            const transactionsCollection = collection(firestore, 'users', user.uid, 'payment-transactions');
+            const coinTransactionData = {
+                userId: user.uid,
+                playerName: user.displayName || 'Anonymous',
+                momoTransactionId: `COIN_ENTRY_${new Date().getTime()}`,
+                amount: 0,
+                status: 'approved' as const,
+                createdAt: serverTimestamp(),
+                entryType: 'coins' as const,
+            };
+            return addDoc(transactionsCollection, coinTransactionData);
+        })
+        .then(() => {
+            toast({
+                title: 'Success!',
+                description: 'You have entered the weekly challenge using your coins.',
+            });
+            setHasApprovedPaymentThisWeek(true);
+        })
+        .catch((error) => {
+            console.error("Error paying with coins:", error);
+            toast({
+                title: 'Error',
+                description: 'Something went wrong. Your coins have been refunded.',
+                variant: 'destructive',
+            });
+            // Refund coins if the second part fails
+            updateDoc(userRef, { coins: increment(WEEKLY_ENTRY_COIN_COST) });
+        })
+        .finally(() => {
+            setIsPayingWithCoins(false);
+        });
+  };
+
   const handleAnswer = async (answer: Answer) => {
     const isCorrect = answer.isCorrect;
     const currentQuestion = questions[currentQuestionIndex];
@@ -537,6 +591,7 @@ export default function Home() {
         return <StartScreen 
                   onStartWeekly={handleStartWeeklyQuiz}
                   onStartDaily={handleStartDailyQuiz}
+                  onPayWithCoins={handlePayWithCoins}
                   user={user} 
                   loading={loading} 
                   hasPlayedThisWeek={hasPlayedThisWeek} 
@@ -546,6 +601,8 @@ export default function Home() {
                   isCheckingPayment={isCheckingPayment}
                   hasPlayedDailyToday={hasPlayedDailyToday}
                   isCheckingDaily={isCheckingDaily}
+                  coinBalance={userProfile?.coins ?? 0}
+                  isPayingWithCoins={isPayingWithCoins}
                 />;
     }
   };

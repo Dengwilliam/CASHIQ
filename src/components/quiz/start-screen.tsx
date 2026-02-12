@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, BarChart, CircleDollarSign, Loader2, Wallet, Award } from 'lucide-react';
+import { ArrowRight, BarChart, CircleDollarSign, Loader2, Wallet, Award, Coins } from 'lucide-react';
 import type { User } from 'firebase/auth';
 import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 type StartScreenProps = {
   onStartWeekly: () => void;
   onStartDaily: () => void;
+  onPayWithCoins: () => void;
   user: User | null;
   loading: boolean;
   hasPlayedThisWeek: boolean | null;
@@ -19,9 +20,11 @@ type StartScreenProps = {
   isCheckingPayment: boolean;
   hasPlayedDailyToday: boolean | null;
   isCheckingDaily: boolean;
+  coinBalance: number;
+  isPayingWithCoins: boolean;
 };
 
-export default function StartScreen({ onStartWeekly, onStartDaily, user, loading, hasPlayedThisWeek, checkingForPastScore, isGeneratingQuiz, hasApprovedPaymentThisWeek, isCheckingPayment, hasPlayedDailyToday, isCheckingDaily }: StartScreenProps) {
+export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoins, user, loading, hasPlayedThisWeek, checkingForPastScore, isGeneratingQuiz, hasApprovedPaymentThisWeek, isCheckingPayment, hasPlayedDailyToday, isCheckingDaily, coinBalance, isPayingWithCoins }: StartScreenProps) {
   
   const handleWeeklySubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,12 +80,36 @@ export default function StartScreen({ onStartWeekly, onStartDaily, user, loading
     if (!hasApprovedPaymentThisWeek) {
       return (
         <div className="w-full flex flex-col items-center gap-4">
-            <p className="text-center text-muted-foreground">Your payment for this week's quiz needs to be approved before you can play.</p>
+            <p className="text-center text-muted-foreground">Pay the weekly entry fee to play.</p>
             <Button asChild className="w-full" size="lg">
                 <Link href="/wallet">
                     <Wallet className="mr-2 h-5 w-5" />
-                    Go to Wallet
+                    Pay with MoMo
                 </Link>
+            </Button>
+            <div className="relative w-full flex items-center justify-center my-2">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">
+                        Or
+                    </span>
+                </div>
+            </div>
+            <Button 
+                onClick={onPayWithCoins}
+                className="w-full" 
+                size="lg" 
+                variant="secondary"
+                disabled={isPayingWithCoins || coinBalance < 1000}
+            >
+                {isPayingWithCoins ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                    <Coins className="mr-2 h-5 w-5" />
+                )}
+                {coinBalance < 1000 ? `Not Enough Coins (${coinBalance})` : `Use 1,000 Coins`}
             </Button>
         </div>
       );
