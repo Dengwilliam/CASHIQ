@@ -6,6 +6,7 @@ import { ArrowRight, BarChart, CircleDollarSign, Loader2, Wallet, Award, Coins }
 import type { User } from 'firebase/auth';
 import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import LivePrizePool from '@/components/live-prize-pool';
 
 type StartScreenProps = {
   onStartWeekly: () => void;
@@ -155,7 +156,7 @@ export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoin
 
   return (
     <Card className="bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl transition-all duration-300 hover:border-primary/40">
-      <CardHeader className="text-center">
+      <CardHeader className="text-center pb-4">
         <CardTitle className="text-4xl sm:text-5xl font-black text-foreground flex items-center justify-center flex-wrap gap-x-4">
           <span>Learn. Play. Earn.</span>
           <CircleDollarSign className="w-12 h-12 md:w-16 md:h-16 text-primary" />
@@ -170,7 +171,11 @@ export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoin
         )}
       </CardHeader>
       
-      <CardContent className="p-2 sm:p-6">
+      <div className="px-2 sm:px-6">
+        <LivePrizePool />
+      </div>
+      
+      <CardContent className="p-2 sm:p-6 pt-0">
         <Tabs defaultValue="weekly" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="weekly">Weekly Challenge</TabsTrigger>
