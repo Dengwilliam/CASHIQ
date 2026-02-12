@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Award, Star, TrendingUp, HelpCircle, Landmark, BrainCircuit, Flame, Target, Calendar, Coins } from 'lucide-react';
+import { Award, Star, TrendingUp, HelpCircle, Landmark, BrainCircuit, Flame, Target, Calendar, Banknote } from 'lucide-react';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import {
   ChartContainer,
@@ -236,7 +236,7 @@ export default function ProfilePage() {
                                 <Card>
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                         <CardTitle className="text-sm font-medium">Coin Balance</CardTitle>
-                                        <Coins className="h-4 w-4 text-muted-foreground" />
+                                        <Banknote className="h-4 w-4 text-muted-foreground" />
                                     </CardHeader>
                                     <CardContent>
                                         <div className="text-2xl font-bold">{profileLoading ? <Skeleton className="h-8 w-16" /> : userProfile?.coins ?? 0}</div>
