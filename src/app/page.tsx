@@ -30,7 +30,7 @@ type AnsweredQuestion = {
   explanation: string | null;
 };
 
-const QUESTIONS_PER_GAME = 10;
+const QUESTIONS_PER_GAME = 20;
 const TAB_SWITCH_PENALTY = 5;
 
 // Utility to shuffle an array
