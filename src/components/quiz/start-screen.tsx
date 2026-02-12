@@ -85,7 +85,7 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
   }
 
   return (
-    <Card className="bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
+    <Card className="bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl transition-all duration-300 hover:border-primary/40">
       <CardHeader className="text-center">
         <CardTitle className="text-4xl sm:text-5xl font-black text-foreground flex items-center justify-center flex-wrap gap-x-4">
           <span>Learn. Play. Earn.</span>
@@ -106,22 +106,22 @@ export default function StartScreen({ onStart, user, loading, hasPlayedThisWeek,
                 <p className="text-sm text-muted-foreground mt-1">
                     Top 4 players win a share of the total weekly entry fees!
                 </p> 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-center">
-                    <div>
-                        <p className="font-semibold text-lg text-primary/80">30%</p>
-                        <p className="text-xs text-muted-foreground">1st Place</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+                    <div className="p-3 bg-primary/10 rounded-lg text-center border border-primary/20">
+                        <p className="font-black text-xl text-primary">1st</p>
+                        <p className="text-sm font-semibold text-foreground">30%</p>
                     </div>
-                    <div>
-                        <p className="font-semibold text-lg text-primary/80">20%</p>
-                        <p className="text-xs text-muted-foreground">2nd Place</p>
+                    <div className="p-3 bg-secondary rounded-lg text-center">
+                        <p className="font-black text-xl text-primary/80">2nd</p>
+                        <p className="text-sm font-semibold text-foreground">20%</p>
                     </div>
-                    <div>
-                        <p className="font-semibold text-lg text-primary/80">10%</p>
-                        <p className="text-xs text-muted-foreground">3rd Place</p>
+                    <div className="p-3 bg-secondary rounded-lg text-center">
+                        <p className="font-black text-xl text-primary/80">3rd</p>
+                        <p className="text-sm font-semibold text-foreground">10%</p>
                     </div>
-                    <div>
-                        <p className="font-semibold text-lg text-primary/80">5%</p>
-                        <p className="text-xs text-muted-foreground">4th Place</p>
+                    <div className="p-3 bg-secondary rounded-lg text-center">
+                        <p className="font-black text-xl text-primary/80">4th</p>
+                        <p className="text-sm font-semibold text-foreground">5%</p>
                     </div>
                 </div>
             </div>

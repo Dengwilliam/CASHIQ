@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Award, Star, TrendingUp, HelpCircle, Landmark } from 'lucide-react';
+import { Award, Star, TrendingUp, HelpCircle, Landmark, BrainCircuit, Flame, Target, Calendar } from 'lucide-react';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import {
   ChartContainer,
@@ -39,6 +39,14 @@ type Score = {
 const payoutFormSchema = z.object({
   momoNumber: z.string().min(9, { message: "Please enter a valid phone number." }).optional().or(z.literal('')),
 });
+
+const badgeIcons: { [key: string]: React.ElementType } = {
+    'Finance Whiz': BrainCircuit,
+    'Perfect Score': Target,
+    'Hot Streak': Flame,
+    'Comeback Kid': TrendingUp,
+    'Weekly Warrior': Calendar,
+};
 
 function ProfileSkeleton() {
     return (
@@ -234,12 +242,15 @@ export default function ProfilePage() {
                              <div>
                                 <h2 className="text-2xl font-bold mb-4 text-center">My Badges</h2>
                                 <div className="flex flex-wrap justify-center gap-4 mb-8">
-                                    {userProfile.badges.map(badge => (
-                                        <div key={badge} className="flex flex-col items-center gap-2 p-4 bg-accent/20 rounded-lg border border-accent/50 w-32 text-center">
-                                            <Award className="h-8 w-8 text-accent" />
-                                            <p className="font-semibold text-sm text-accent-foreground">{badge}</p>
-                                        </div>
-                                    ))}
+                                    {userProfile.badges.map(badge => {
+                                        const Icon = badgeIcons[badge] || Award;
+                                        return (
+                                            <div key={badge} className="flex flex-col items-center gap-2 p-4 bg-accent/20 rounded-lg border border-accent/50 w-32 text-center transition-all hover:bg-accent/30 hover:scale-105">
+                                                <Icon className="h-8 w-8 text-accent" />
+                                                <p className="font-semibold text-sm text-accent-foreground">{badge}</p>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             </div>
                         )}

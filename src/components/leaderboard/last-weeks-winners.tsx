@@ -88,9 +88,9 @@ export default function LastWeeksWinners() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[80px]">Rank</TableHead>
-                <TableHead>Player</TableHead>
-                <TableHead className="text-right">Score</TableHead>
+                <TableHead className="w-[80px] text-foreground/80 uppercase tracking-wider text-xs">Rank</TableHead>
+                <TableHead className="text-foreground/80 uppercase tracking-wider text-xs">Player</TableHead>
+                <TableHead className="text-right text-foreground/80 uppercase tracking-wider text-xs">Score</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
