@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { collection, query, where, type Timestamp } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { startOfWeek, endOfWeek, format } from 'date-fns';
+import { format } from 'date-fns';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -40,18 +40,16 @@ function LeaderboardSkeleton() {
     );
 }
 
-export default function LeaderboardTable() {
+type LeaderboardTableProps = {
+  week: {
+    start: Date;
+    end: Date;
+  };
+};
+
+export default function LeaderboardTable({ week }: LeaderboardTableProps) {
   const firestore = useFirestore();
   const { user } = useUser();
-  const [week, setWeek] = useState<{ start: Date; end: Date } | null>(null);
-
-  useEffect(() => {
-    const today = new Date();
-    // Week starts on Monday and ends on Sunday at midnight.
-    const start = startOfWeek(today, { weekStartsOn: 1 });
-    const end = endOfWeek(today, { weekStartsOn: 1 });
-    setWeek({ start, end });
-  }, []);
 
   const scoresQuery = useMemoFirebase(() => {
     if (!firestore || !week) return null;
@@ -112,7 +110,7 @@ export default function LeaderboardTable() {
       <CardHeader className="text-center">
         <CardTitle className="text-3xl font-bold">Weekly Leaderboard</CardTitle>
         <CardDescription className="text-base">
-          {week ? `Top 10 players for ${format(week.start, 'MMM d')} – ${format(week.end, 'MMM d, yyyy')}` : 'Top 10 players of the week.'}
+          {week ? `Top 10 players for ${format(week.start, 'MMM d')} – ${format(week.end, 'MMM d, yyyy')}` : 'Loading...'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -125,7 +123,10 @@ export default function LeaderboardTable() {
             </p>
           </div>
         )}
-        {topScores && !loading && (
+        {!loading && !error && topScores.length === 0 && (
+            <p className="text-center text-muted-foreground py-8">No scores recorded for this week.</p>
+        )}
+        {topScores && topScores.length > 0 && !loading && (
           <Table>
             <TableHeader>
               <TableRow>
