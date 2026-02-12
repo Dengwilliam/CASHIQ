@@ -42,7 +42,7 @@ const prompt = ai.definePrompt({
   input: { schema: QuizInputSchema },
   output: { schema: QuizOutputSchema },
   prompt: `You are an expert in finance and creating educational content. 
-  Generate a quiz with {{count}} multiple-choice questions about personal finance, investing, and economics.
+  Generate a quiz with {{count}} multiple-choice questions about finance, crypto, blockchain, stocks, and bonds.
   The difficulty of the questions should be {{difficulty}}.
   
   For each question, provide exactly 4 answer options, and ensure that only one of them is correct.
