@@ -30,7 +30,6 @@ export function useCollection<T = DocumentData>(q: Query<T> | null) {
         setError(null);
       },
       (err) => {
-        console.error(err);
         // Safely get path for error reporting
         const internalQuery = (q as any)._query;
         let path = 'unknown path';

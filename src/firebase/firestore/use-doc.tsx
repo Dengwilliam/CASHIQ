@@ -30,7 +30,6 @@ export function useDoc<T = DocumentData>(ref: DocumentReference<T> | null) {
         setError(null);
       },
       (err) => {
-        console.error(err);
         const permissionError = new FirestorePermissionError({
           path: ref.path,
           operation: 'get',
