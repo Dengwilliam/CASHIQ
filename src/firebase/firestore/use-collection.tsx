@@ -31,8 +31,17 @@ export function useCollection<T = DocumentData>(q: Query<T> | null) {
       },
       (err) => {
         console.error(err);
+        // Safely get path for error reporting
+        const internalQuery = (q as any)._query;
+        let path = 'unknown path';
+        if (internalQuery?.path?.segments) {
+            path = internalQuery.path.segments.join('/');
+        } else if (internalQuery?.collectionGroup) {
+            path = `collection group '${internalQuery.collectionGroup}'`;
+        }
+        
         const permissionError = new FirestorePermissionError({
-            path: (q as any)._query?.path?.segments.join('/'),
+            path: path,
             operation: 'list',
         });
         errorEmitter.emit('permission-error', permissionError);
