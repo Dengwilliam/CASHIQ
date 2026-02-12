@@ -51,7 +51,7 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
     return "Keep learning! Every quiz is a step forward.";
   };
 
-  const shareText = `I scored ${score} on FinQuiz Challenge! Can you beat my score?`;
+  const shareText = `I scored ${score} on CapitalQuiz Challenge! Can you beat my score?`;
   const encodedShareText = encodeURIComponent(shareText);
   const encodedAppUrl = encodeURIComponent(appUrl);
 

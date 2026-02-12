@@ -6,7 +6,7 @@ import WinnerNotification from '@/components/leaderboard/winner-notification';
 import LastWeeksWinners from '@/components/leaderboard/last-weeks-winners';
 
 export const metadata = {
-  title: 'Leaderboard | FinQuiz Challenge',
+  title: 'Leaderboard | CapitalQuiz Challenge',
 };
 
 export const revalidate = 300;

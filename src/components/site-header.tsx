@@ -8,7 +8,7 @@ export default function SiteHeader() {
       <div className="absolute top-6 left-6 flex items-center gap-2 text-foreground transition-colors hover:text-foreground/80">
         <Link href="/" className="flex items-center gap-2">
           <Trophy className="h-8 w-8 text-accent" />
-          <h1 className="text-2xl font-black">FinQuiz Challenge</h1>
+          <h1 className="text-2xl font-black">CapitalQuiz Challenge</h1>
         </Link>
       </div>
       <div className="absolute top-4 right-4">

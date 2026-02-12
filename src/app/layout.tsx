@@ -5,7 +5,7 @@ import { FirebaseProvider } from '@/firebase/provider';
 import SiteFooter from '@/components/site-footer';
 
 export const metadata: Metadata = {
-  title: 'FinQuiz Challenge',
+  title: 'CapitalQuiz Challenge',
   description: 'Gamified financial literacy with weekly cash rewards',
 };
 

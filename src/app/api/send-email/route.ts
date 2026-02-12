@@ -7,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // IMPORTANT: You must have a verified domain with Resend to use this email address.
 // Replace this with your own sending address.
-const fromEmail = 'FinQuiz Challenge <noreply@yourdomain.com>';
+const fromEmail = 'CapitalQuiz Challenge <noreply@yourdomain.com>';
 
 export async function POST(request: Request) {
   try {

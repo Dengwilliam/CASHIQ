@@ -2,7 +2,7 @@ import SiteHeader from '@/components/site-header';
 import { Landmark, WalletCards, PiggyBank } from 'lucide-react';
 
 export const metadata = {
-  title: 'About Us | FinQuiz Challenge',
+  title: 'About Us | CapitalQuiz Challenge',
 };
 
 export default function AboutPage() {
@@ -21,7 +21,7 @@ export default function AboutPage() {
         <div className="mx-auto max-w-4xl space-y-12">
           <header className="text-center">
             <h1 className="text-4xl font-black tracking-tight text-primary sm:text-5xl">
-              About FinQuiz Challenge
+              About CapitalQuiz Challenge
             </h1>
             <p className="mt-4 text-base text-foreground/80 max-w-2xl mx-auto">
               Empowering people to learn finance through fun, competition, and rewards.
@@ -31,7 +31,7 @@ export default function AboutPage() {
           <section id="mission">
             <h2 className="text-3xl font-bold tracking-tight mb-4">Our Mission</h2>
             <p className="text-base text-foreground/80">
-              At FinQuiz Challenge, our mission is to improve financial literacy by making learning simple, exciting, and rewarding. We believe that everyone deserves access to financial knowledge — and we’re using gamification to make that possible.
+              At CapitalQuiz Challenge, our mission is to improve financial literacy by making learning simple, exciting, and rewarding. We believe that everyone deserves access to financial knowledge — and we’re using gamification to make that possible.
             </p>
           </section>
 
@@ -45,7 +45,7 @@ export default function AboutPage() {
           <section id="why-we-built-this">
             <h2 className="text-3xl font-bold tracking-tight mb-4">Why We Built This</h2>
             <p className="text-base text-foreground/80">
-              Many young people want to learn how to manage money, invest, budget, and plan for the future — but traditional education is often boring, confusing, or inaccessible. FinQuiz Challenge was created to close this gap by delivering bite-sized financial knowledge in an entertaining and interactive way.
+              Many young people want to learn how to manage money, invest, budget, and plan for the future — but traditional education is often boring, confusing, or inaccessible. CapitalQuiz Challenge was created to close this gap by delivering bite-sized financial knowledge in an entertaining and interactive way.
             </p>
           </section>
 
@@ -60,7 +60,7 @@ export default function AboutPage() {
               <li><span className="font-semibold">Safe, secure wallet and payouts</span></li>
             </ul>
             <p className="mt-4 text-base text-foreground/80 italic">
-              FinQuiz Challenge isn’t just another quiz game — it combines learning with real-world rewards, making the journey both educational and motivating.
+              CapitalQuiz Challenge isn’t just another quiz game — it combines learning with real-world rewards, making the journey both educational and motivating.
             </p>
           </section>
 
@@ -86,7 +86,7 @@ export default function AboutPage() {
           <section id="founder">
             <h2 className="text-3xl font-bold tracking-tight mb-4">Meet the Founder</h2>
             <p className="text-base text-foreground/80">
-              Founded by [Founder's Name], FinQuiz Challenge was built from a passion to improve financial knowledge in a fun and accessible way.
+              Founded by [Founder's Name], CapitalQuiz Challenge was built from a passion to improve financial knowledge in a fun and accessible way.
             </p>
           </section>
 
