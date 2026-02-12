@@ -70,6 +70,8 @@ export default function SignUpPage() {
         consecutiveWeeksPlayed: 0,
         lastPlayTimestamp: null,
         hasCompletedOnboarding: false,
+        coins: 0,
+        lastDailyPlayTimestamp: null,
       };
 
       setDoc(userRef, userData)

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { collection, query, where, getDocs, type Timestamp, doc, updateDoc, arrayUnion, getDoc, serverTimestamp, type DocumentData } from 'firebase/firestore';
-import { startOfWeek, endOfWeek, isMonday, isSameWeek, subWeeks } from 'date-fns';
+import { collection, query, where, getDocs, type Timestamp, doc, updateDoc, arrayUnion, getDoc, serverTimestamp, type DocumentData, increment } from 'firebase/firestore';
+import { startOfWeek, endOfWeek, isMonday, isSameWeek, subWeeks, isToday } from 'date-fns';
 
 import StartScreen from "@/components/quiz/start-screen";
 import QuizScreen from "@/components/quiz/quiz-screen";
@@ -13,6 +13,7 @@ import { useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { saveScore } from "@/lib/scores";
 import SiteHeader from "@/components/site-header";
 import { generateQuiz } from "@/ai/flows/generate-quiz-flow";
+import { generateDailyQuiz } from "@/ai/flows/generate-daily-quiz-flow";
 import { generateExplanation } from "@/ai/flows/generate-explanation-flow";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -22,6 +23,7 @@ import type { UserProfile } from "@/lib/user-profile";
 
 
 type GameState = "start" | "quiz" | "results";
+type QuizType = "weekly" | "daily";
 
 type AnsweredQuestion = {
   question: Question;
@@ -30,7 +32,9 @@ type AnsweredQuestion = {
   explanation: string | null;
 };
 
-const QUESTIONS_PER_GAME = 20;
+const WEEKLY_QUESTIONS_PER_GAME = 20;
+const DAILY_QUESTIONS_PER_GAME = 5;
+const COINS_PER_CORRECT_ANSWER = 5;
 const TAB_SWITCH_PENALTY = 5;
 
 // Utility to shuffle an array
@@ -40,6 +44,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 export default function Home() {
   const [gameState, setGameState] = useState<GameState>("start");
+  const [quizType, setQuizType] = useState<QuizType | null>(null);
   const [score, setScore] = useState(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -47,12 +52,15 @@ export default function Home() {
   const [checkingForPastScore, setCheckingForPastScore] = useState(true);
   const [hasApprovedPaymentThisWeek, setHasApprovedPaymentThisWeek] = useState<boolean | null>(null);
   const [isCheckingPayment, setIsCheckingPayment] = useState(true);
+  const [hasPlayedDailyToday, setHasPlayedDailyToday] = useState<boolean | null>(null);
+  const [isCheckingDaily, setIsCheckingDaily] = useState(true);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
   const [newlyAwardedBadges, setNewlyAwardedBadges] = useState<string[]>([]);
   const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
   const [hotStreak, setHotStreak] = useState(0);
   const [maxHotStreak, setMaxHotStreak] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [lastGameReward, setLastGameReward] = useState(0);
 
 
   const firestore = useFirestore();
@@ -91,10 +99,10 @@ export default function Home() {
     }
   }, [toast]);
 
-  const setupGame = useCallback(async () => {
+  const setupWeeklyQuiz = useCallback(async () => {
     setIsGeneratingQuiz(true);
     try {
-      const quizOutput = await generateQuiz({ count: QUESTIONS_PER_GAME, difficulty: 'medium' });
+      const quizOutput = await generateQuiz({ count: WEEKLY_QUESTIONS_PER_GAME, difficulty: 'medium' });
       const questionsWithShuffledAnswers = quizOutput.questions.map(q => ({
         ...q,
         answers: shuffleArray(q.answers)
@@ -116,122 +124,137 @@ export default function Home() {
 
   useEffect(() => {
     const processEndGame = async () => {
-      if (!firestore || !user) return;
+      if (!firestore || !user || !quizType) return;
   
-      // 1. Save the current score and wait for it to complete
-      await saveScore(firestore, {
-        playerName: user.displayName || 'Anonymous',
-        score,
-        userId: user.uid,
-      });
-  
-      const newBadges: string[] = [];
-      const userRef = doc(firestore, 'users', user.uid);
-      let userProfileData: DocumentData | null = null;
-      let existingBadges: string[] = [];
-  
-      try {
-        const userDoc = await getDoc(userRef);
-        if (userDoc.exists()) {
-          userProfileData = userDoc.data();
-          existingBadges = userProfileData?.badges || [];
+      if (quizType === 'weekly') {
+        setLastGameReward(score);
+        // 1. Save the current score and wait for it to complete
+        await saveScore(firestore, {
+          playerName: user.displayName || 'Anonymous',
+          score,
+          userId: user.uid,
+        });
+    
+        const newBadges: string[] = [];
+        const userRef = doc(firestore, 'users', user.uid);
+        let userProfileData: DocumentData | null = null;
+        let existingBadges: string[] = [];
+    
+        try {
+          const userDoc = await getDoc(userRef);
+          if (userDoc.exists()) {
+            userProfileData = userDoc.data();
+            existingBadges = userProfileData?.badges || [];
+          }
+        } catch (e) {
+          console.error('Could not fetch user profile for badge check', e);
         }
-      } catch (e) {
-        console.error('Could not fetch user profile for badge check', e);
-      }
-  
-      // --- BADGE LOGIC ---
-  
-      // 2. Score-based badges
-      if (score >= 80) newBadges.push('Finance Whiz');
-      if (score === 100) newBadges.push('Perfect Score');
-  
-      // 3. Hot Streak badge
-      if (maxHotStreak >= 5) newBadges.push('Hot Streak');
-  
-      // 4. Comeback Kid badge
-      const scoresQuery = query(
-        collection(firestore, 'scores'),
-        where('userId', '==', user.uid)
-      );
-      try {
-        const querySnapshot = await getDocs(scoresQuery);
-        if (querySnapshot.docs.length > 1) {
-            const allScores = querySnapshot.docs.map(doc => ({ score: doc.data().score, createdAt: doc.data().createdAt as Timestamp }));
-            allScores.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
-            const previousScores = allScores.slice(1);
-            if (previousScores.length > 0) {
-                const previousHighScore = Math.max(...previousScores.map(s => s.score));
-                if (score > previousHighScore) {
-                    newBadges.push('Comeback Kid');
-                }
-            }
+    
+        // --- BADGE LOGIC ---
+        if (score >= 80) newBadges.push('Finance Whiz');
+        if (score === 100) newBadges.push('Perfect Score');
+        if (maxHotStreak >= 5) newBadges.push('Hot Streak');
+    
+        const scoresQuery = query(
+          collection(firestore, 'scores'),
+          where('userId', '==', user.uid)
+        );
+        try {
+          const querySnapshot = await getDocs(scoresQuery);
+          if (querySnapshot.docs.length > 1) {
+              const allScores = querySnapshot.docs.map(doc => ({ score: doc.data().score, createdAt: doc.data().createdAt as Timestamp }));
+              allScores.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+              const previousScores = allScores.slice(1);
+              if (previousScores.length > 0) {
+                  const previousHighScore = Math.max(...previousScores.map(s => s.score));
+                  if (score > previousHighScore) {
+                      newBadges.push('Comeback Kid');
+                  }
+              }
+          }
+        } catch (e) {
+          console.error('Could not check for past scores for Comeback Kid badge', e);
         }
-      } catch (e) {
-        console.error('Could not check for past scores for Comeback Kid badge', e);
-      }
-  
-      // 5. Weekly Warrior badge & update play history
-      let consecutiveWeeksPlayed = userProfileData?.consecutiveWeeksPlayed || 0;
-      const lastPlayTimestamp = userProfileData?.lastPlayTimestamp;
-      const today = new Date();
-  
-      if (lastPlayTimestamp) {
-        const lastPlayDate = (lastPlayTimestamp as Timestamp).toDate();
-        const lastWeek = subWeeks(today, 1);
-        if (isSameWeek(lastPlayDate, lastWeek, { weekStartsOn: 1 })) {
-          consecutiveWeeksPlayed += 1;
-        } else if (!isSameWeek(lastPlayDate, today, { weekStartsOn: 1 })) {
-          consecutiveWeeksPlayed = 1; // Reset if they missed a week
+    
+        let consecutiveWeeksPlayed = userProfileData?.consecutiveWeeksPlayed || 0;
+        const lastPlayTimestamp = userProfileData?.lastPlayTimestamp;
+        const today = new Date();
+    
+        if (lastPlayTimestamp) {
+          const lastPlayDate = (lastPlayTimestamp as Timestamp).toDate();
+          const lastWeek = subWeeks(today, 1);
+          if (isSameWeek(lastPlayDate, lastWeek, { weekStartsOn: 1 })) {
+            consecutiveWeeksPlayed += 1;
+          } else if (!isSameWeek(lastPlayDate, today, { weekStartsOn: 1 })) {
+            consecutiveWeeksPlayed = 1; // Reset if they missed a week
+          }
+        } else {
+          consecutiveWeeksPlayed = 1; // First time playing
         }
-      } else {
-        consecutiveWeeksPlayed = 1; // First time playing
-      }
-  
-      if (consecutiveWeeksPlayed >= 3) {
-        newBadges.push('Weekly Warrior');
-      }
-  
-      // --- END BADGE LOGIC ---
-  
-      // Filter out badges the user already has
-      const uniqueNewBadges = newBadges.filter((b) => !existingBadges.includes(b));
-  
-      if (uniqueNewBadges.length > 0) {
-        setNewlyAwardedBadges(uniqueNewBadges);
-      }
-  
-      // Update user profile with new badges and play history
-      try {
-        const updateData: { [key: string]: any } = {
-          lastPlayTimestamp: serverTimestamp(),
-          consecutiveWeeksPlayed,
-        };
+    
+        if (consecutiveWeeksPlayed >= 3) {
+          newBadges.push('Weekly Warrior');
+        }
+    
+        const uniqueNewBadges = newBadges.filter((b) => !existingBadges.includes(b));
+    
         if (uniqueNewBadges.length > 0) {
-          updateData.badges = arrayUnion(...uniqueNewBadges);
+          setNewlyAwardedBadges(uniqueNewBadges);
         }
-  
-        updateDoc(userRef, updateData).catch(e => {
-            console.error('Failed to update user profile with badges/history', e);
+    
+        try {
+          const updateData: { [key: string]: any } = {
+            lastPlayTimestamp: serverTimestamp(),
+            consecutiveWeeksPlayed,
+          };
+          if (uniqueNewBadges.length > 0) {
+            updateData.badges = arrayUnion(...uniqueNewBadges);
+          }
+    
+          updateDoc(userRef, updateData).catch(e => {
+              console.error('Failed to update user profile with badges/history', e);
+               const permissionError = new FirestorePermissionError({
+                  path: userRef.path,
+                  operation: 'update',
+                  requestResourceData: updateData,
+              });
+              errorEmitter.emit('permission-error', permissionError);
+          });
+        } catch (e) {
+          console.error('Failed to prepare user profile update', e);
+        }
+        setHasPlayedThisWeek(true);
+      } else if (quizType === 'daily') {
+        const correctAnswers = answeredQuestions.filter(q => q.isCorrect).length;
+        const coinsEarned = correctAnswers * COINS_PER_CORRECT_ANSWER;
+        setLastGameReward(coinsEarned);
+
+        const userRef = doc(firestore, 'users', user.uid);
+        const updateData: { [key: string]: any } = {
+            lastDailyPlayTimestamp: serverTimestamp(),
+        };
+        if (coinsEarned > 0) {
+            updateData.coins = increment(coinsEarned);
+        }
+
+        await updateDoc(userRef, updateData).catch(e => {
+            console.error('Failed to update user coins and daily timestamp', e);
              const permissionError = new FirestorePermissionError({
                 path: userRef.path,
                 operation: 'update',
-                requestResourceData: updateData,
+                requestResourceData: { coins: `increment(${coinsEarned})`, lastDailyPlayTimestamp: 'SERVER_TIMESTAMP'},
             });
             errorEmitter.emit('permission-error', permissionError);
         });
-      } catch (e) {
-        console.error('Failed to prepare user profile update', e);
+
+        setHasPlayedDailyToday(true);
       }
-  
-      // After saving the score, mark that the user has played this week
-      setHasPlayedThisWeek(true);
     };
   
     if (gameState === 'results') {
       processEndGame();
     }
-  }, [gameState, firestore, user, score, maxHotStreak]);
+  }, [gameState, firestore, user, score, maxHotStreak, quizType, answeredQuestions, userProfile]);
 
   useEffect(() => {
     const checkUserScore = async () => {
@@ -255,7 +278,6 @@ export default function Home() {
         const querySnapshot = await getDocs(scoresQuery);
         const scoresThisWeek = querySnapshot.docs.filter(doc => {
             const scoreData = doc.data();
-            // serverTimestamp is null until the server acknowledges the write, so we check.
             if (scoreData.createdAt) {
                 const scoreDate = (scoreData.createdAt as Timestamp).toDate();
                 return scoreDate >= start && scoreDate <= end;
@@ -265,7 +287,7 @@ export default function Home() {
         setHasPlayedThisWeek(scoresThisWeek.length > 0);
       } catch (error) {
         console.error("Error checking for past score:", error);
-        setHasPlayedThisWeek(false); // Assume they can play if there's an error
+        setHasPlayedThisWeek(false);
       } finally {
         setCheckingForPastScore(false);
       }
@@ -313,6 +335,28 @@ export default function Home() {
 
     checkUserPayment();
   }, [user, firestore, gameState]);
+  
+  useEffect(() => {
+    const checkUserDailyPlay = async () => {
+        if (!user || !userProfile) {
+            setHasPlayedDailyToday(null);
+            setIsCheckingDaily(false);
+            return;
+        }
+        setIsCheckingDaily(true);
+        if (userProfile.lastDailyPlayTimestamp) {
+            const lastPlayDate = (userProfile.lastDailyPlayTimestamp as Timestamp).toDate();
+            setHasPlayedDailyToday(isToday(lastPlayDate));
+        } else {
+            setHasPlayedDailyToday(false);
+        }
+        setIsCheckingDaily(false);
+    };
+
+    if (!profileLoading) {
+      checkUserDailyPlay();
+    }
+  }, [user, userProfile, profileLoading, gameState]);
 
 
   useEffect(() => {
@@ -333,7 +377,7 @@ export default function Home() {
     };
   }, [gameState, toast]);
 
-  const handleStartGame = async () => {
+  const handleStartWeeklyQuiz = async () => {
     if (!user) {
       toast({
         title: "Please log in",
@@ -364,7 +408,47 @@ export default function Home() {
     setAnsweredQuestions([]);
     setHotStreak(0);
     setMaxHotStreak(0);
-    await setupGame();
+    setQuizType('weekly');
+    await setupWeeklyQuiz();
+  };
+
+  const handleStartDailyQuiz = async () => {
+    if (!user) {
+      toast({ title: "Please log in", description: "You must be logged in to play.", variant: "destructive" });
+      return;
+    }
+    if (hasPlayedDailyToday) {
+      toast({ title: "Already Played", description: "You can only play the daily quiz once per day. Come back tomorrow!", variant: "destructive" });
+      return;
+    }
+    setScore(0);
+    setCurrentQuestionIndex(0);
+    setNewlyAwardedBadges([]);
+    setAnsweredQuestions([]);
+    setHotStreak(0);
+    setMaxHotStreak(0);
+    setQuizType('daily');
+    
+    setIsGeneratingQuiz(true);
+    try {
+      const quizOutput = await generateDailyQuiz({ count: DAILY_QUESTIONS_PER_GAME });
+      const questionsWithShuffledAnswers = quizOutput.questions.map(q => ({
+        ...q,
+        answers: shuffleArray(q.answers)
+      }));
+      setQuestions(questionsWithShuffledAnswers);
+      setGameState("quiz");
+    } catch (error) {
+      console.error("Failed to generate daily quiz:", error);
+      toast({
+        title: "Error",
+        description: "Could not generate a new daily quiz. Please try again.",
+        variant: "destructive",
+      });
+      setGameState("start");
+    } finally {
+      setIsGeneratingQuiz(false);
+    }
   };
 
   const handleAnswer = async (answer: Answer) => {
@@ -423,8 +507,7 @@ export default function Home() {
 
   const handleRestart = () => {
     setGameState("start");
-    // We go back to start, and the useEffect will re-check if they can play.
-    // Since they just finished, hasPlayedThisWeek will become true.
+    setQuizType(null);
   };
 
   const renderGameState = () => {
@@ -442,23 +525,27 @@ export default function Home() {
         );
       case "results":
         return <ResultScreen 
-                  score={score} 
+                  score={lastGameReward} 
                   onRestart={handleRestart} 
                   playerName={user?.displayName || 'Player'} 
                   newlyAwardedBadges={newlyAwardedBadges} 
                   answeredQuestions={answeredQuestions}
+                  quizType={quizType}
                />;
       case "start":
       default:
         return <StartScreen 
-                  onStart={handleStartGame} 
+                  onStartWeekly={handleStartWeeklyQuiz}
+                  onStartDaily={handleStartDailyQuiz}
                   user={user} 
                   loading={loading} 
                   hasPlayedThisWeek={hasPlayedThisWeek} 
                   checkingForPastScore={checkingForPastScore} 
                   isGeneratingQuiz={isGeneratingQuiz}
                   hasApprovedPaymentThisWeek={hasApprovedPaymentThisWeek}
-                  isCheckingPayment={isCheckingPayment} 
+                  isCheckingPayment={isCheckingPayment}
+                  hasPlayedDailyToday={hasPlayedDailyToday}
+                  isCheckingDaily={isCheckingDaily}
                 />;
     }
   };

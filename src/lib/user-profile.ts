@@ -10,4 +10,6 @@ export type UserProfile = {
     consecutiveWeeksPlayed?: number;
     lastPlayTimestamp?: Timestamp;
     hasCompletedOnboarding?: boolean;
+    coins?: number;
+    lastDailyPlayTimestamp?: Timestamp;
 }
