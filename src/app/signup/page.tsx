@@ -26,7 +26,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import SiteHeader from '@/components/site-header';
 
 const formSchema = z.object({
-  displayName: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
+  displayName: z.string().min(2, { message: 'Nickname must be at least 2 characters.' }),
   email: z.string().email({ message: 'Invalid email address.' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
@@ -53,9 +53,12 @@ export default function SignUpPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
+      const avatarUrl = `https://api.dicebear.com/8.x/bottts-neutral/svg?seed=${encodeURIComponent(user.uid)}`;
+
       // Update Firebase Auth profile
       await updateProfile(user, {
         displayName: values.displayName,
+        photoURL: avatarUrl,
       });
 
       // Create user document in Firestore
@@ -64,7 +67,7 @@ export default function SignUpPage() {
         uid: user.uid,
         displayName: values.displayName,
         email: values.email,
-        photoURL: user.photoURL, // Initially null
+        photoURL: avatarUrl,
         badges: [], // Add empty badges array
         momoNumber: '', // Initialize empty MoMo number
         consecutiveWeeksPlayed: 0,
@@ -117,9 +120,9 @@ export default function SignUpPage() {
                 name="displayName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Display Name</FormLabel>
+                    <FormLabel>Nickname</FormLabel>
                     <FormControl>
-                      <Input placeholder="John Doe" {...field} />
+                      <Input placeholder="Your Nickname" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
