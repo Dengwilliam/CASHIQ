@@ -130,6 +130,23 @@
         }
       },
       "required": ["userId", "momoTransactionId", "amount", "status", "createdAt", "playerName"]
+    },
+    "prizePool": {
+      "title": "Prize Pool",
+      "description": "Represents the total prize pool for a given week.",
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "number",
+          "description": "The total amount in the prize pool."
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The start date of the week for this prize pool."
+        }
+      },
+      "required": ["total", "startDate"]
     }
   },
   "auth": {
@@ -159,6 +176,12 @@
         "$ref": "#/backend/entities/paymentTransaction"
       },
       "description": "Stores user-submitted payment transactions for a specific user."
+    },
+    "/prizePools/{weekId}": {
+      "schema": {
+        "$ref": "#/backend/entities/prizePool"
+      },
+      "description": "Stores aggregated weekly prize pools."
     }
   }
 }

@@ -1,48 +1,37 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collectionGroup, query, where, type Timestamp } from 'firebase/firestore';
-import { startOfWeek, endOfWeek } from 'date-fns';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { startOfWeek, format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Trophy } from 'lucide-react';
 
-type PaymentTransaction = {
-    id: string;
-    amount: number;
-    status: 'pending' | 'approved' | 'rejected';
-    entryType: 'cash' | 'coins';
-    createdAt: Timestamp;
-};
+type PrizePool = {
+    total: number;
+}
 
 export default function LivePrizePool() {
   const firestore = useFirestore();
 
-  const currentWeek = useMemo(() => {
+  const weekId = useMemo(() => {
     const today = new Date();
     const start = startOfWeek(today, { weekStartsOn: 1 });
-    const end = endOfWeek(today, { weekStartsOn: 1 });
-    return { start, end };
+    return format(start, 'yyyy-MM-dd');
   }, []);
 
-  const paymentsQuery = useMemoFirebase(() => {
+  const prizePoolRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(
-        collectionGroup(firestore, 'payment-transactions'), 
-        where('status', '==', 'approved'),
-        where('entryType', '==', 'cash'),
-        where('createdAt', '>=', currentWeek.start),
-        where('createdAt', '<=', currentWeek.end)
-    );
-  }, [firestore, currentWeek]);
+    return doc(firestore, 'prizePools', weekId);
+  }, [firestore, weekId]);
 
-  const { data: approvedTransactions, loading, error } = useCollection<PaymentTransaction>(paymentsQuery);
+  const { data: prizePoolDoc, loading, error } = useDoc<PrizePool>(prizePoolRef);
 
   const totalPrizePool = useMemo(() => {
-    if (!approvedTransactions) return 0;
-    return approvedTransactions.reduce((total, tx) => total + tx.amount, 0);
-  }, [approvedTransactions]);
+    if (!prizePoolDoc) return 0;
+    return prizePoolDoc.total;
+  }, [prizePoolDoc]);
 
   if (error) {
     // Fail gracefully, don't break the whole page. The error will be in the console.

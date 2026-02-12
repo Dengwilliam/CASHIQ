@@ -1,8 +1,9 @@
 'use client';
 
-import { doc, updateDoc, getDoc, type Firestore } from 'firebase/firestore';
+import { doc, getDoc, type Firestore, runTransaction, increment } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { startOfWeek, format } from 'date-fns';
 
 export const updateTransactionStatus = (
   db: Firestore,
@@ -11,12 +12,58 @@ export const updateTransactionStatus = (
   status: 'approved' | 'rejected'
 ) => {
   const transactionRef = doc(db, 'users', userId, 'payment-transactions', transactionId);
-  const dataToUpdate = { status };
 
-  return updateDoc(transactionRef, dataToUpdate)
+  return runTransaction(db, async (transaction) => {
+    const txDoc = await transaction.get(transactionRef);
+    if (!txDoc.exists()) {
+      throw "Transaction document does not exist!";
+    }
+    const txData = txDoc.data();
+
+    // Only process if status is changing
+    if (txData.status === status) {
+        return;
+    }
+
+    const wasApproved = txData.status === 'approved';
+
+    // Update the transaction status
+    transaction.update(transactionRef, { status: status });
+
+    // Update the prize pool if it's a cash transaction
+    if (txData.entryType === 'cash' && txData.createdAt) {
+        const weekStartDate = startOfWeek(txData.createdAt.toDate(), { weekStartsOn: 1 });
+        const weekId = format(weekStartDate, 'yyyy-MM-dd');
+        const prizePoolRef = doc(db, 'prizePools', weekId);
+
+        let amountChange = 0;
+        // If just approved, add amount
+        if (status === 'approved' && !wasApproved) {
+            amountChange = txData.amount;
+        } 
+        // If just rejected (from approved), subtract amount
+        else if (status === 'rejected' && wasApproved) {
+            amountChange = -txData.amount;
+        }
+
+        if (amountChange !== 0) {
+            const prizePoolDoc = await transaction.get(prizePoolRef);
+            if (!prizePoolDoc.exists()) {
+                // Don't create a pool for a negative change
+                if (amountChange > 0) {
+                    transaction.set(prizePoolRef, {
+                        total: amountChange,
+                        startDate: weekStartDate,
+                    });
+                }
+            } else {
+                transaction.update(prizePoolRef, { total: increment(amountChange) });
+            }
+        }
+    }
+  })
     .then(() => {
         // After successful update, send an email notification.
-        // This is a "fire-and-forget" call so it doesn't block the admin UI.
         getDoc(transactionRef)
         .then(transactionSnap => {
             if (!transactionSnap.exists()) {
@@ -47,7 +94,6 @@ export const updateTransactionStatus = (
                 <p>Thanks,<br/>The CapitalQuiz Challenge Team</p>
             `;
 
-            // Send the email via our API route
             fetch('/api/send-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -58,13 +104,9 @@ export const updateTransactionStatus = (
         .catch(e => console.error("Failed to prepare and send status email:", e));
     })
     .catch((serverError) => {
-        const permissionError = new FirestorePermissionError({
-        path: transactionRef.path,
-        operation: 'update',
-        requestResourceData: dataToUpdate,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        // Re-throw the error so the calling component can handle UI updates
-        throw serverError;
+        // The transaction will automatically be rolled back.
+        console.error("Transaction update failed:", serverError);
+        // We can throw a generic error for the toast.
+        throw new Error(`Failed to update transaction status: ${serverError.message}`);
     });
 };

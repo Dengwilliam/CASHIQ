@@ -27,10 +27,11 @@ service cloud.firestore {
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
       allow update, delete: if false;
     }
-    
-    // This allows an admin to query the 'payment-transactions' collection group
-    match /{path=**}/payment-transactions/{transactionId} {
-      allow list: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+
+    match /prizePools/{weekId} {
+        allow get: if true;
+        allow list: if true; // list is needed for some queries, though we only use get.
+        allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
   }
 }
