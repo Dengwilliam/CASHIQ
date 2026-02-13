@@ -6,11 +6,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
-import { Award, Star, TrendingUp, HelpCircle, Banknote, Calendar, BrainCircuit, Target, Flame, ShieldOff, ShieldCheck, Loader2 } from 'lucide-react';
+import { Award, Star, TrendingUp, HelpCircle, Banknote, Calendar, BrainCircuit, Target, Flame, ShieldOff, ShieldCheck, Loader2, Trash2 } from 'lucide-react';
 import type { UserProfile } from '@/lib/user-profile';
-import { Button } from '../ui/button';
-import { updateUserSuspensionStatus } from '@/lib/admin';
+import { Button, buttonVariants } from '../ui/button';
+import { updateUserSuspensionStatus, deleteUser } from '@/lib/admin';
 import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+
 
 type Score = { id: string; score: number; createdAt: Timestamp; };
 
@@ -32,6 +34,7 @@ export default function UserDetailDialog({ userId, isOpen, onOpenChange }: UserD
     const firestore = useFirestore();
     const { toast } = useToast();
     const [isUpdating, setIsUpdating] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const userProfileRef = useMemoFirebase(() => (firestore && userId) ? doc(firestore, 'users', userId) : null, [firestore, userId]);
     const scoresQuery = useMemoFirebase(() => (firestore && userId) ? query(collection(firestore, 'scores'), where('userId', '==', userId)) : null, [firestore, userId]);
@@ -63,6 +66,28 @@ export default function UserDetailDialog({ userId, isOpen, onOpenChange }: UserD
             });
         } finally {
             setIsUpdating(false);
+        }
+    };
+    
+    const handleDeleteUser = async () => {
+        if (!firestore || !userProfile || !userId) return;
+        setIsDeleting(true);
+        try {
+            await deleteUser(firestore, userId);
+            toast({
+                title: 'User Deleted',
+                description: "The user and all their associated data have been deleted.",
+            });
+            onOpenChange(false);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+            toast({
+                title: 'Deletion Failed',
+                description: errorMessage,
+                variant: 'destructive',
+            });
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -164,15 +189,45 @@ export default function UserDetailDialog({ userId, isOpen, onOpenChange }: UserD
 
                              <div>
                                 <h3 className="font-semibold mb-2">Admin Actions</h3>
-                                <Button 
-                                    variant={userProfile.isSuspended ? 'secondary' : 'destructive'} 
-                                    onClick={handleToggleSuspension} 
-                                    disabled={isUpdating}
-                                    className="w-full"
-                                >
-                                    {isUpdating ? <Loader2 className="animate-spin" /> : userProfile.isSuspended ? <ShieldCheck /> : <ShieldOff />}
-                                    {isUpdating ? 'Updating...' : userProfile.isSuspended ? 'Unsuspend User' : 'Suspend User'}
-                                </Button>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <Button 
+                                      variant={userProfile.isSuspended ? 'secondary' : 'destructive'} 
+                                      onClick={handleToggleSuspension} 
+                                      disabled={isUpdating || isDeleting}
+                                      className="w-full"
+                                  >
+                                      {isUpdating ? <Loader2 className="animate-spin" /> : userProfile.isSuspended ? <ShieldCheck /> : <ShieldOff />}
+                                      {isUpdating ? 'Updating...' : userProfile.isSuspended ? 'Unsuspend User' : 'Suspend User'}
+                                  </Button>
+                                  
+                                  <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                          <Button variant="destructive" className="w-full" disabled={isDeleting || isUpdating}>
+                                              <Trash2 />
+                                              Delete User
+                                          </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                          <AlertDialogHeader>
+                                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                  This action cannot be undone. This will permanently delete the user's profile, scores, and payment history from the application. It will not remove their login credentials.
+                                              </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                                              <AlertDialogAction 
+                                                  onClick={handleDeleteUser} 
+                                                  disabled={isDeleting}
+                                                  className={buttonVariants({ variant: "destructive" })}
+                                              >
+                                                  {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                  {isDeleting ? 'Deleting...' : 'Yes, delete user'}
+                                              </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
                             </div>
                         </div>
                     </>

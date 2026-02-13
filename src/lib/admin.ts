@@ -1,6 +1,6 @@
 'use client';
 
-import { doc, type Firestore, runTransaction, increment, updateDoc } from 'firebase/firestore';
+import { doc, type Firestore, runTransaction, increment, updateDoc, deleteDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { startOfWeek, format } from 'date-fns';
 
 export const adjustPrizePool = async (
@@ -94,4 +94,39 @@ export const updateTransactionStatus = async (
     console.error("Transaction status update failed:", e);
     throw new Error(`Failed to update transaction: ${e instanceof Error ? e.message : 'Unknown error'}`);
   }
+};
+
+export const deleteUser = async (
+  db: Firestore,
+  userId: string
+) => {
+  if (!userId) {
+    throw new Error("User ID is required.");
+  }
+
+  const batch = writeBatch(db);
+
+  // 1. Delete user document
+  const userRef = doc(db, 'users', userId);
+  batch.delete(userRef);
+
+  // 2. Delete user's scores
+  const scoresQuery = query(collection(db, 'scores'), where('userId', '==', userId));
+  const scoresSnapshot = await getDocs(scoresQuery);
+  scoresSnapshot.forEach(doc => {
+    batch.delete(doc.ref);
+  });
+
+  // 3. Delete user's payment transactions (subcollection)
+  const transactionsQuery = collection(db, `users/${userId}/payment-transactions`);
+  const transactionsSnapshot = await getDocs(transactionsQuery);
+  transactionsSnapshot.forEach(doc => {
+    batch.delete(doc.ref);
+  });
+
+  // Note: This does not delete the user from Firebase Authentication as that requires
+  // the Admin SDK, which is not available on the client. The user's login will remain,
+  // but all their app-specific data will be gone.
+
+  await batch.commit();
 };
