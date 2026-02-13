@@ -53,3 +53,45 @@ export const updateUserSuspensionStatus = async (
     throw new Error(`Failed to update user status: ${e instanceof Error ? e.message : 'Unknown error'}`);
   }
 };
+
+
+export const updateTransactionStatus = async (
+  db: Firestore,
+  userId: string,
+  transactionId: string,
+  status: 'approved' | 'rejected'
+) => {
+  if (!userId || !transactionId) {
+    throw new Error("User ID and Transaction ID are required.");
+  }
+  
+  const userRef = doc(db, 'users', userId);
+  const transactionRef = doc(db, `users/${userId}/payment-transactions`, transactionId);
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const txDoc = await transaction.get(transactionRef);
+      if (!txDoc.exists()) {
+        throw new Error("Transaction not found.");
+      }
+
+      const txData = txDoc.data();
+      
+      // Prevent re-processing
+      if (txData.status !== 'pending') {
+          throw new Error(`Transaction is already ${txData.status}.`);
+      }
+
+      transaction.update(transactionRef, { status });
+
+      if (status === 'approved') {
+        transaction.update(userRef, {
+          coins: increment(txData.amount)
+        });
+      }
+    });
+  } catch (e) {
+    console.error("Transaction status update failed:", e);
+    throw new Error(`Failed to update transaction: ${e instanceof Error ? e.message : 'Unknown error'}`);
+  }
+};

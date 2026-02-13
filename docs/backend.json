@@ -80,6 +80,15 @@
           "type": "boolean",
           "description": "Whether the user has completed the onboarding tour."
         },
+        "coins": {
+            "type": "number",
+            "description": "The user's coin balance, earned from daily quizzes."
+        },
+        "lastDailyPlayTimestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp of the last time the user played the daily quiz."
+        },
         "isSuspended": {
           "type": "boolean",
           "description": "Whether the user's account is suspended."
@@ -103,6 +112,42 @@
         }
       },
       "required": ["total", "startDate"]
+    },
+    "paymentTransaction": {
+      "title": "Payment Transaction",
+      "description": "Represents a manual payment transaction submitted by a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "playerName": {
+          "type": "string"
+        },
+        "momoTransactionId": {
+          "type": "string",
+          "description": "The transaction ID from the mobile money provider."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount paid."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "description": "The status of the transaction."
+        },
+        "screenshotUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the payment screenshot."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "playerName", "momoTransactionId", "amount", "status", "createdAt"]
     }
   },
   "auth": {
@@ -126,6 +171,12 @@
         "$ref": "#/backend/entities/userProfile"
       },
       "description": "Stores user profile information."
+    },
+    "/users/{userId}/payment-transactions/{transactionId}": {
+        "schema": {
+            "$ref": "#/backend/entities/paymentTransaction"
+        },
+        "description": "Stores manual payment transactions submitted by a user for review."
     },
     "/prizePools/{weekId}": {
       "schema": {

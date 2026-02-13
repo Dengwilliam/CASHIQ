@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BarChart3, Info } from 'lucide-react';
+import { BarChart3, Info, Wallet } from 'lucide-react';
 import AuthButton from '@/components/auth-button';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -18,6 +18,10 @@ export default function SiteHeader() {
                 <Link href="/leaderboard" className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
                   <BarChart3 className="h-5 w-5" />
                   Leaderboard
+                </Link>
+                 <Link href="/wallet" className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                  <Wallet className="h-5 w-5" />
+                  Wallet
                 </Link>
                 <Link href="/about" className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
                   <Info className="h-5 w-5" />
@@ -42,6 +46,12 @@ export default function SiteHeader() {
                                     <Link href="/leaderboard">
                                         <BarChart3 className="mr-2" />
                                         Leaderboard
+                                    </Link>
+                                </Button>
+                                 <Button variant="ghost" className="justify-start text-lg" asChild>
+                                    <Link href="/wallet">
+                                        <Wallet className="mr-2" />
+                                        Wallet
                                     </Link>
                                 </Button>
                                 <Button variant="ghost" className="justify-start text-lg" asChild>

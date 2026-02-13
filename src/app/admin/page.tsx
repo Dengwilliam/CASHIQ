@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import DashboardAnalytics from '@/components/admin/dashboard-analytics';
 import PrizePoolManagement from '@/components/admin/prize-pool-management';
+import TransactionsTable from '@/components/admin/transactions-table';
 
 export default function AdminPage() {
   const { isAdmin, loading } = useAdmin();
@@ -45,9 +46,10 @@ export default function AdminPage() {
           Admin Dashboard
         </h1>
       </header>
-      <main className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="space-y-8">
+      <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
             <DashboardAnalytics />
+            <TransactionsTable />
         </div>
         <div className="space-y-8">
             <PrizePoolManagement />

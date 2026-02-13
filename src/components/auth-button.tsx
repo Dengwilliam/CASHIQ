@@ -58,6 +58,12 @@ export default function AuthButton() {
                   <span>Profile</span>
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/wallet">
+                  <Wallet className="mr-2 h-4 w-4" />
+                  <span>Wallet</span>
+                </Link>
+              </DropdownMenuItem>
             </>
           )}
           <DropdownMenuSeparator />
