@@ -2,7 +2,7 @@
 /**
  * @fileOverview An AI flow for generating a social share image card.
  *
- * - generateShareImage - A function that generates an SVG image for sharing quiz results.
+ * - generateShareImage - A function that generates an image for sharing quiz results.
  * - ShareImageInput - The input type for the generateShareImage function.
  * - ShareImageOutput - The return type for the generateShareImage function.
  */
@@ -18,8 +18,9 @@ const ShareImageInputSchema = z.object({
 });
 export type ShareImageInput = z.infer<typeof ShareImageInputSchema>;
 
+// The output is now a data URI for a generated image.
 const ShareImageOutputSchema = z.object({
-  svg: z.string().describe('The generated SVG image as a string.'),
+  imageUrl: z.string().describe('The data URI of the generated image.'),
 });
 export type ShareImageOutput = z.infer<typeof ShareImageOutputSchema>;
 
@@ -27,36 +28,26 @@ export async function generateShareImage(input: ShareImageInput): Promise<ShareI
   return generateShareImageFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateShareImagePrompt',
-  input: { schema: ShareImageInputSchema },
-  output: { schema: ShareImageOutputSchema },
-  prompt: `You are an expert SVG designer. Create a visually appealing SVG image (600x315px) for sharing quiz results on social media.
-The design should be vibrant, modern, and suitable for a gaming/finance app with a dark theme.
+// Helper to build the prompt string
+const buildPrompt = (input: ShareImageInput): string => {
+  let prompt = `A vibrant and celebratory social media share card for a finance quiz app named "CashIQ". The design should be modern, clean, and eye-catching with a dark theme. Prominently feature the text "CashIQ" with its logo (a brain-like 'C' with a dollar sign).
 
-Use the Poppins font, which will be available.
-The primary color is a vibrant purple (#6B45F5).
-The accent color is a bright yellow (#F5D02C).
-The background color is a dark charcoal (#1A1822).
-The text color is a light off-white (#DCDAE1).
+The main focus should be the player's achievement.
+Player Name: "${input.playerName}"
+Their ${input.quizType === 'weekly' ? 'Score' : 'Coins Earned'}: ${input.score}. This should be the largest text element.
 
-The SVG should include:
-1.  A background rectangle with the dark charcoal color and rounded corners (rx="16").
-2.  The app title "CashIQ" at the top, perhaps with the accent color.
-3.  The player's name: "{{playerName}}".
-4.  The final score: "{{score}}". This should be the most prominent element.
-5.  A label indicating if it's the "Weekly Score" or "Daily Coins Earned", based on the quizType: "{{quizType}}".
-6.  If there are badges, list up to 2 of them: {{#each badges}}"{{this}}" {{/each}}.
-7.  Add some abstract, energetic background shapes using gradients of the primary and accent colors to make it look dynamic.
+Use an energetic color palette with a dark background, vibrant purple (#6B45F5) as the primary color, and bright yellow (#F5D02C) for accents. Include abstract geometric shapes or lines to add a sense of dynamism. The overall tone should be exciting and rewarding.
+`;
 
-Structure the output as a valid SVG string within the JSON format. Do not include any markdown formatting like \`\`\`svg.
+  if (input.badges && input.badges.length > 0) {
+    prompt += `\nInclude a small section that says "New Badge Unlocked: ${input.badges[0]}"`;
+  }
+  
+  prompt += `\nEnsure all text is legible against the background. Aspect ratio 16:9.`;
 
-Example of a badge element if badges exist:
-<text x="300" y="280" font-family="Poppins" font-size="14" fill="#DCDAE1" text-anchor="middle">New Badge: {{badges.[0]}}</text>
+  return prompt;
+};
 
-Make the score the largest and most eye-catching text element.
-`,
-});
 
 const generateShareImageFlow = ai.defineFlow(
   {
@@ -65,12 +56,21 @@ const generateShareImageFlow = ai.defineFlow(
     outputSchema: ShareImageOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    if (!output) {
+    const promptText = buildPrompt(input);
+
+    const { media } = await ai.generate({
+      model: 'googleai/imagen-4.0-fast-generate-001',
+      prompt: promptText,
+      config: {
+        // Aspect ratio for social media. 1:1 (square), 9:16 (story), 16:9 (landscape)
+        aspectRatio: '16:9'
+      }
+    });
+
+    if (!media || !media.url) {
       throw new Error('Failed to generate share image.');
     }
-    // The model might wrap the SVG in markdown, so we clean it up.
-    const cleanedSvg = output.svg.replace(/```svg\n?/, '').replace(/```$/, '').trim();
-    return { svg: cleanedSvg };
+    
+    return { imageUrl: media.url };
   }
 );

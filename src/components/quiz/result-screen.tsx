@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import type { Question, Answer } from '@/lib/questions';
 import { generateShareImage, type ShareImageInput } from '@/ai/flows/generate-share-image-flow';
 import { Skeleton } from '@/components/ui/skeleton';
-
+import Image from 'next/image';
 
 type AnsweredQuestion = {
   question: Question;
@@ -30,7 +30,7 @@ type ResultScreenProps = {
 
 
 export default function ResultScreen({ score, onRestart, playerName, newlyAwardedBadges = [], answeredQuestions = [], quizType }: ResultScreenProps) {
-  const [shareImageSvg, setShareImageSvg] = useState<string | null>(null);
+  const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const isWeekly = quizType === 'weekly';
 
@@ -46,10 +46,10 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
           badges: newlyAwardedBadges,
         };
         const result = await generateShareImage(input);
-        setShareImageSvg(result.svg);
+        setShareImageUrl(result.imageUrl);
       } catch (error) {
         console.error("Failed to generate share image", error);
-        setShareImageSvg(null);
+        setShareImageUrl(null);
       } finally {
         setIsGeneratingImage(false);
       }
@@ -74,33 +74,37 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
     : `I just completed my daily quiz on CashIQ!`;
 
   const handleDownload = () => {
-    if (!shareImageSvg) return;
-    const dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(shareImageSvg)));
+    if (!shareImageUrl) return;
     const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = 'cashiq-result.svg';
+    a.href = shareImageUrl;
+    a.download = 'cashiq-result.png';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
   };
 
   const handleShare = async () => {
-    if (!shareImageSvg) return;
+    if (!shareImageUrl) return;
     
-    const blob = new Blob([shareImageSvg], { type: 'image/svg+xml' });
-    const file = new File([blob], 'result.svg', { type: 'image/svg+xml' });
+    try {
+      // Data URIs can be shared directly in some cases, but converting to blob is more robust
+      const response = await fetch(shareImageUrl);
+      const blob = await response.blob();
+      const file = new File([blob], 'cashiq-result.png', { type: 'image/png' });
 
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
           title: 'My CashIQ Score!',
           text: shareText,
         });
-      } catch (error) {
-        console.error('Error sharing:', error);
+      } else {
+        // Fallback for browsers that don't support sharing files
+        handleDownload();
       }
-    } else {
+    } catch (error) {
+      console.error('Error sharing:', error);
+      // Fallback to download if sharing fails
       handleDownload();
     }
   };
@@ -141,24 +145,32 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
           <div className="flex flex-col items-center gap-4">
             {isGeneratingImage && (
               <div className="flex flex-col items-center gap-2">
-                <Skeleton className="w-[300px] h-[157.5px] rounded-lg" />
+                <Skeleton className="w-full max-w-md aspect-[16/9] rounded-lg" />
                 <p className="text-sm text-muted-foreground">Generating your share card...</p>
               </div>
             )}
-            {shareImageSvg && !isGeneratingImage && (
-              <div className="w-full max-w-md rounded-lg overflow-hidden shadow-lg border border-border" dangerouslySetInnerHTML={{ __html: shareImageSvg }} />
+            {shareImageUrl && !isGeneratingImage && (
+              <div className="w-full max-w-md rounded-lg overflow-hidden shadow-lg border border-border">
+                  <Image 
+                    src={shareImageUrl} 
+                    alt="Your shareable quiz result card" 
+                    width={1280} 
+                    height={720}
+                    className="w-full h-auto"
+                  />
+              </div>
             )}
-            {!shareImageSvg && !isGeneratingImage && (
+            {!shareImageUrl && !isGeneratingImage && (
                <div className="flex flex-col items-center gap-2 text-center p-4 bg-destructive/10 border border-destructive/50 rounded-lg w-full max-w-md">
                   <p className="text-sm text-destructive-foreground font-semibold">Sorry, we couldn't generate your share card.</p>
               </div>
             )}
             <div className="flex gap-4">
-              <Button onClick={handleShare} size="lg" disabled={isGeneratingImage || !shareImageSvg}>
+              <Button onClick={handleShare} size="lg" disabled={isGeneratingImage || !shareImageUrl}>
                 <Share2 className="mr-2 h-5 w-5" />
                 Share
               </Button>
-              <Button onClick={handleDownload} size="lg" variant="secondary" disabled={isGeneratingImage || !shareImageSvg}>
+              <Button onClick={handleDownload} size="lg" variant="secondary" disabled={isGeneratingImage || !shareImageUrl}>
                   <Download className="mr-2 h-5 w-5" />
                   Download
               </Button>
