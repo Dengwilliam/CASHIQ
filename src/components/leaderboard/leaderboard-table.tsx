@@ -19,6 +19,8 @@ type ScoreEntry = {
   rank?: number;
 };
 
+type Admin = { id: string; };
+
 const prizeDistribution: { [key: number]: number } = {
   1: 0.30, // 30%
   2: 0.20, // 20%
@@ -55,7 +57,6 @@ export default function LeaderboardTable({ week }: LeaderboardTableProps) {
 
   const scoresQuery = useMemoFirebase(() => {
     if (!firestore || !week) return null;
-    // Query is simplified to avoid composite index. Sorting and limiting is done client-side.
     return query(
         collection(firestore, 'scores'), 
         where('createdAt', '>=', week.start),
@@ -63,17 +64,27 @@ export default function LeaderboardTable({ week }: LeaderboardTableProps) {
     );
   }, [firestore, week]);
 
-  const { data: allScores, loading, error } = useCollection<ScoreEntry>(scoresQuery);
+  const adminsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'admins'));
+  }, [firestore]);
+
+  const { data: allScores, loading: scoresLoading, error: scoresError } = useCollection<ScoreEntry>(scoresQuery);
+  const { data: admins, loading: adminsLoading, error: adminsError } = useCollection<Admin>(adminsQuery);
   
   const { topScores, currentUserRank, isUserInTop10 } = useMemo(() => {
-    if (!allScores) return { topScores: [], currentUserRank: null, isUserInTop10: false };
+    if (scoresLoading || adminsLoading || !allScores || !admins) {
+        return { topScores: [], currentUserRank: null, isUserInTop10: false };
+    }
 
-    const rankedScores = [...allScores]
+    const adminIds = new Set(admins.map(admin => admin.id));
+    const nonAdminScores = allScores.filter(score => !adminIds.has(score.userId));
+
+    const rankedScores = [...nonAdminScores]
       .sort((a, b) => {
         if (a.score !== b.score) {
-          return b.score - a.score; // Higher score first
+          return b.score - a.score;
         }
-        // Tie-breaker: earlier time first
         return a.createdAt.toMillis() - b.createdAt.toMillis();
       })
       .map((score, index) => ({ ...score, rank: index + 1 }));
@@ -88,8 +99,10 @@ export default function LeaderboardTable({ week }: LeaderboardTableProps) {
     const isUserInTop10 = !!(currentUserRankData && currentUserRankData.rank <= 10);
 
     return { topScores, currentUserRank: currentUserRankData, isUserInTop10 };
-  }, [allScores, user]);
+  }, [allScores, admins, user, scoresLoading, adminsLoading]);
 
+  const loading = scoresLoading || adminsLoading;
+  const error = scoresError || adminsError;
 
   const getPrizePercentage = (rank: number) => {
     const percentage = prizeDistribution[rank];

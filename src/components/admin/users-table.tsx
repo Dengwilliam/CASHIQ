@@ -17,6 +17,10 @@ type UserProfile = {
     momoNumber?: string;
 };
 
+type Admin = {
+    id: string;
+};
+
 function TableSkeleton() {
     return (
         <div className="space-y-2">
@@ -40,12 +44,30 @@ export default function UsersTable() {
         return query(collection(firestore, 'users'));
     }, [firestore]);
 
-    const { data: users, loading, error } = useCollection<UserProfile>(usersQuery);
+    const adminsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'admins'));
+    }, [firestore]);
+
+    const { data: users, loading: usersLoading, error: usersError } = useCollection<UserProfile>(usersQuery);
+    const { data: admins, loading: adminsLoading, error: adminsError } = useCollection<Admin>(adminsQuery);
     
-    const sortedUsers = useMemo(() => {
-        if (!users) return [];
-        return [...users].sort((a, b) => a.displayName.localeCompare(b.displayName));
-    }, [users]);
+    const { nonAdminUsers, loading, error } = useMemo(() => {
+        const isLoading = usersLoading || adminsLoading;
+        const anError = usersError || adminsError;
+
+        if (isLoading || anError || !users || !admins) {
+            return { nonAdminUsers: [], loading: isLoading, error: anError };
+        }
+        
+        const adminIds = new Set(admins.map(admin => admin.id));
+        const filteredUsers = users
+            .filter(user => !adminIds.has(user.id))
+            .sort((a, b) => a.displayName.localeCompare(b.displayName));
+            
+        return { nonAdminUsers: filteredUsers, loading: false, error: null };
+    }, [users, admins, usersLoading, adminsLoading, usersError, adminsError]);
+
     
     if (error) {
         return (
@@ -71,7 +93,7 @@ export default function UsersTable() {
                     <CardDescription>A list of all users and their registered MoMo numbers for payouts.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {loading ? <TableSkeleton /> : sortedUsers && sortedUsers.length > 0 ? (
+                    {loading ? <TableSkeleton /> : nonAdminUsers && nonAdminUsers.length > 0 ? (
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -82,7 +104,7 @@ export default function UsersTable() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {sortedUsers.map(user => (
+                                {nonAdminUsers.map(user => (
                                     <TableRow key={user.id}>
                                         <TableCell className="font-medium">{user.displayName}</TableCell>
                                         <TableCell>{user.email}</TableCell>

@@ -17,6 +17,8 @@ type ScoreEntry = {
   userId: string;
 };
 
+type Admin = { id: string; };
+
 function WinnersSkeleton() {
     return (
         <div className="space-y-3">
@@ -50,18 +52,30 @@ export default function LastWeeksWinners() {
         where('createdAt', '<=', lastWeek.end)
     );
   }, [firestore, lastWeek]);
+  
+  const adminsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'admins'));
+  }, [firestore]);
 
-  const { data: allScores, loading } = useCollection<ScoreEntry>(scoresQuery);
+  const { data: allScores, loading: scoresLoading } = useCollection<ScoreEntry>(scoresQuery);
+  const { data: admins, loading: adminsLoading } = useCollection<Admin>(adminsQuery);
   
   const winners = useMemo(() => {
-    if (!allScores) return null;
-    return [...allScores]
+    if (!allScores || !admins) return null;
+
+    const adminIds = new Set(admins.map(admin => admin.id));
+    const nonAdminScores = allScores.filter(score => !adminIds.has(score.userId));
+
+    return [...nonAdminScores]
       .sort((a, b) => {
         if (a.score !== b.score) return b.score - a.score;
         return a.createdAt.toMillis() - b.createdAt.toMillis();
       })
       .slice(0, 4);
-  }, [allScores]);
+  }, [allScores, admins]);
+
+  const loading = scoresLoading || adminsLoading;
 
   const getRankIcon = (rank: number) => {
     const colors = ['text-yellow-400', 'text-slate-400', 'text-orange-400'];
