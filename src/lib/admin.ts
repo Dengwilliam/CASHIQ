@@ -90,7 +90,7 @@ export const updateTransactionStatus = (
             const htmlBody = `
                 <p>Hello ${userData.displayName},</p>
                 <p>Your payment for CashIQ (Transaction ID: ${transactionData.momoTransactionId}) has been <strong>${status}</strong>.</p>
-                ${status === 'approved' ? '<p>You can now head to the app and play this week\'s quiz. Good luck!</p>' : '<p>If you believe this was a mistake, please contact support.</p>'}
+                ${status === 'approved' ? '<p>You can now head to the app and play this week\'s quiz. Good luck!</p>' : '<p>If you believe this was a mistake, please contact our support team at <a href="mailto:support@cashiq.com">support@cashiq.com</a>.</p>'}
                 <p>Thanks,<br/>The CashIQ Team</p>
             `;
 

@@ -219,7 +219,7 @@ export default function WalletPage() {
                         <p>To add funds to your wallet and participate in the quiz, please send the entry fee of <strong className="text-primary">25,000 SSP</strong> to the following MTN MoMo account:</p>
                         <div className="p-4 bg-secondary rounded-lg text-center">
                             <p className="text-sm text-muted-foreground">MTN MoMo Number</p>
-                            <p className="text-2xl font-bold text-primary">09XX XXX XXX</p>
+                            <p className="text-2xl font-bold text-primary">0922 123 456</p>
                         </div>
                         <p className="text-sm text-muted-foreground">After sending the payment, copy the <strong className="text-foreground">Transaction ID</strong> from your confirmation message and submit it here along with a screenshot.</p>
                     </CardContent>

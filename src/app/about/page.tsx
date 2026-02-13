@@ -92,9 +92,9 @@ export default function AboutPage() {
         </section>
 
         <section id="founder">
-          <h2 className="text-3xl font-bold tracking-tight mb-4 text-center">Meet the Founder</h2>
-          <p className="text-base text-foreground/80 text-center">
-            Founded by [Founder's Name], CashIQ was built from a passion to improve financial knowledge in a fun and accessible way.
+          <h2 className="text-3xl font-bold tracking-tight mb-4 text-center">Our Story</h2>
+          <p className="text-base text-foreground/80 text-center max-w-3xl mx-auto">
+            CashIQ was built from a passion to improve financial knowledge in a fun and accessible way, started by a small team dedicated to making financial literacy engaging for everyone.
           </p>
         </section>
 
