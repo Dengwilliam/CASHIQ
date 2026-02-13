@@ -12,4 +12,5 @@ export type UserProfile = {
     hasCompletedOnboarding?: boolean;
     coins?: number;
     lastDailyPlayTimestamp?: Timestamp;
+    isSuspended?: boolean;
 }

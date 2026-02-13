@@ -74,6 +74,7 @@ export default function SignUpPage() {
         hasCompletedOnboarding: false,
         coins: 0,
         lastDailyPlayTimestamp: null,
+        isSuspended: false,
       };
 
       setDoc(userRef, userData)

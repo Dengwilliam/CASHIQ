@@ -1,6 +1,6 @@
 'use client';
 
-import { doc, getDoc, type Firestore, runTransaction, increment } from 'firebase/firestore';
+import { doc, getDoc, type Firestore, runTransaction, increment, updateDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { startOfWeek, format } from 'date-fns';
@@ -143,4 +143,21 @@ export const adjustPrizePool = async (
         // Re-throw a more user-friendly error
         throw new Error(`Failed to adjust prize pool: ${e instanceof Error ? e.message : 'Unknown error'}`);
     }
+};
+
+export const updateUserSuspensionStatus = async (
+  db: Firestore,
+  userId: string,
+  isSuspended: boolean
+) => {
+  if (!userId) {
+    throw new Error("User ID is required.");
+  }
+  const userRef = doc(db, 'users', userId);
+  try {
+    await updateDoc(userRef, { isSuspended });
+  } catch (e) {
+    console.error("User suspension update failed: ", e);
+    throw new Error(`Failed to update user status: ${e instanceof Error ? e.message : 'Unknown error'}`);
+  }
 };

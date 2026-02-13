@@ -14,8 +14,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useAuth } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useAuth, useFirestore } from '@/firebase';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -28,6 +29,7 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -43,7 +45,25 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
+      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
+      // Check for suspension
+      const userRef = doc(firestore, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists() && userDoc.data().isSuspended) {
+        // User is suspended, sign them out and show a message
+        await signOut(auth);
+        toast({
+          title: 'Account Suspended',
+          description: 'Your account has been suspended. Please contact support.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return; // Stop execution
+      }
+
       router.push('/');
     } catch (error: any) {
       toast({

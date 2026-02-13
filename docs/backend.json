@@ -83,6 +83,10 @@
         "hasCompletedOnboarding": {
           "type": "boolean",
           "description": "Whether the user has completed the onboarding tour."
+        },
+        "isSuspended": {
+          "type": "boolean",
+          "description": "Whether the user's account is suspended."
         }
       },
       "required": ["uid", "displayName", "email"]

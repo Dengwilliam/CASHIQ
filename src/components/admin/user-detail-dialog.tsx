@@ -1,13 +1,16 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, where, type Timestamp } from 'firebase/firestore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
-import { Award, Star, TrendingUp, HelpCircle, Banknote, Calendar, BrainCircuit, Target, Flame } from 'lucide-react';
+import { Award, Star, TrendingUp, HelpCircle, Banknote, Calendar, BrainCircuit, Target, Flame, ShieldOff, ShieldCheck, Loader2 } from 'lucide-react';
 import type { UserProfile } from '@/lib/user-profile';
+import { Button } from '../ui/button';
+import { updateUserSuspensionStatus } from '@/lib/admin';
+import { useToast } from '@/hooks/use-toast';
 
 type Score = { id: string; score: number; createdAt: Timestamp; };
 
@@ -27,6 +30,8 @@ type UserDetailDialogProps = {
 
 export default function UserDetailDialog({ userId, isOpen, onOpenChange }: UserDetailDialogProps) {
     const firestore = useFirestore();
+    const { toast } = useToast();
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const userProfileRef = useMemoFirebase(() => (firestore && userId) ? doc(firestore, 'users', userId) : null, [firestore, userId]);
     const scoresQuery = useMemoFirebase(() => (firestore && userId) ? query(collection(firestore, 'scores'), where('userId', '==', userId)) : null, [firestore, userId]);
@@ -40,6 +45,27 @@ export default function UserDetailDialog({ userId, isOpen, onOpenChange }: UserD
     }, [scoresData]);
 
     const loading = profileLoading || scoresLoading;
+
+    const handleToggleSuspension = async () => {
+        if (!firestore || !userProfile || !userId) return;
+        setIsUpdating(true);
+        try {
+            await updateUserSuspensionStatus(firestore, userId, !userProfile.isSuspended);
+            toast({
+                title: 'Success',
+                description: `User has been ${!userProfile.isSuspended ? 'suspended' : 'unsuspended'}.`,
+            });
+        } catch (error) {
+            toast({
+                title: 'Error',
+                description: 'Failed to update user status.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -67,7 +93,7 @@ export default function UserDetailDialog({ userId, isOpen, onOpenChange }: UserD
                             </div>
                         </DialogHeader>
                         <div className="space-y-6 py-4 max-h-[60vh] overflow-y-auto pr-2">
-                             <div className="grid grid-cols-2 gap-4">
+                             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div className="flex items-center gap-3 rounded-lg bg-secondary p-3">
                                     <Banknote className="h-6 w-6 text-primary" />
                                     <div>
@@ -80,6 +106,15 @@ export default function UserDetailDialog({ userId, isOpen, onOpenChange }: UserD
                                     <div>
                                         <p className="text-sm text-muted-foreground">Quizzes Played</p>
                                         <p className="font-bold">{sortedScores.length}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 rounded-lg bg-secondary p-3">
+                                    {userProfile.isSuspended ? <ShieldOff className="h-6 w-6 text-destructive" /> : <ShieldCheck className="h-6 w-6 text-success" />}
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Account Status</p>
+                                        <p className={`font-bold ${userProfile.isSuspended ? 'text-destructive' : 'text-success'}`}>
+                                            {userProfile.isSuspended ? 'Suspended' : 'Active'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -113,6 +148,19 @@ export default function UserDetailDialog({ userId, isOpen, onOpenChange }: UserD
                                     ))}
                                     </ul>
                                 ) : <p className="text-muted-foreground text-sm">No quiz history for this user.</p>}
+                            </div>
+
+                             <div>
+                                <h3 className="font-semibold mb-2">Admin Actions</h3>
+                                <Button 
+                                    variant={userProfile.isSuspended ? 'secondary' : 'destructive'} 
+                                    onClick={handleToggleSuspension} 
+                                    disabled={isUpdating}
+                                    className="w-full"
+                                >
+                                    {isUpdating ? <Loader2 className="animate-spin" /> : userProfile.isSuspended ? <ShieldCheck /> : <ShieldOff />}
+                                    {isUpdating ? 'Updating...' : userProfile.isSuspended ? 'Unsuspend User' : 'Suspend User'}
+                                </Button>
                             </div>
                         </div>
                     </>
