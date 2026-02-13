@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collectionGroup, query, getDocs, collection } from 'firebase/firestore';
+import { collectionGroup, query, orderBy } from 'firebase/firestore';
 import type { Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -14,10 +14,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Check, X, Image as ImageIcon } from 'lucide-react';
+import { Check, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { StatusBadge } from '@/components/ui/status-badge';
-import type { UserProfile } from '@/lib/user-profile';
 
 type PaymentTransaction = {
     id: string;
@@ -49,74 +48,24 @@ export default function TransactionsTable() {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [updatingId, setUpdatingId] = useState<string | null>(null);
-    const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
 
-    const usersQuery = useMemoFirebase(() => {
+    const transactionsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return query(collection(firestore, 'users'));
+        return query(
+            collectionGroup(firestore, 'payment-transactions'),
+            orderBy('createdAt', 'desc')
+        );
     }, [firestore]);
 
-    const { data: users, loading: usersLoading, error: usersError } = useCollection<UserProfile>(usersQuery);
-
-    useEffect(() => {
-        if (usersError) {
-            setError(usersError);
-            setLoading(false);
-            return;
-        }
-
-        if (!firestore || usersLoading || !users) {
-            return;
-        }
-
-        setLoading(true);
-
-        const fetchAllTransactions = async () => {
-            try {
-                const allTransactions: PaymentTransaction[] = [];
-                const transactionPromises = users.map(user => {
-                    const userTransactionsQuery = query(collection(firestore, 'users', user.id, 'payment-transactions'));
-                    return getDocs(userTransactionsQuery);
-                });
-                
-                const userTransactionsSnapshots = await Promise.all(transactionPromises);
-                
-                userTransactionsSnapshots.forEach(snapshot => {
-                    snapshot.forEach(doc => {
-                        allTransactions.push({ id: doc.id, ...doc.data() } as PaymentTransaction);
-                    });
-                });
-                setTransactions(allTransactions);
-                setError(null);
-            } catch (e: any) {
-                setError(e);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchAllTransactions();
-    }, [firestore, users, usersLoading, usersError]);
-
-
-    const sortedTransactions = useMemo(() => {
-        if (!transactions) return [];
-        return [...transactions].sort((a, b) => {
-            if (!a.createdAt) return 1; // Push items without a timestamp to the end
-            if (!b.createdAt) return -1;
-            return b.createdAt.toMillis() - b.createdAt.toMillis();
-        });
-    }, [transactions]);
+    const { data: transactions, loading, error } = useCollection<PaymentTransaction>(transactionsQuery);
 
     const filteredTransactions = useMemo(() => {
         return {
-            pending: sortedTransactions?.filter(t => t.status === 'pending') || [],
-            approved: sortedTransactions?.filter(t => t.status === 'approved') || [],
-            rejected: sortedTransactions?.filter(t => t.status === 'rejected') || [],
+            pending: transactions?.filter(t => t.status === 'pending') || [],
+            approved: transactions?.filter(t => t.status === 'approved') || [],
+            rejected: transactions?.filter(t => t.status === 'rejected') || [],
         };
-    }, [sortedTransactions]);
+    }, [transactions]);
 
     const handleUpdateStatus = async (userId: string, transactionId: string, status: 'approved' | 'rejected') => {
         if (!firestore) return;
@@ -127,20 +76,11 @@ export default function TransactionsTable() {
                 title: 'Success',
                 description: `Transaction has been ${status}.`,
             });
-            // Refetch transactions after update
-            setLoading(true);
-            const updatedTransactions = [...transactions];
-            const txIndex = updatedTransactions.findIndex(tx => tx.id === transactionId);
-            if (txIndex > -1) {
-                updatedTransactions[txIndex].status = status;
-                setTransactions(updatedTransactions);
-            }
-            setLoading(false);
-
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
             toast({
                 title: 'Error',
-                description: `Failed to update transaction.`,
+                description: `Failed to update transaction: ${errorMessage}`,
                 variant: 'destructive',
             });
         } finally {
@@ -155,7 +95,7 @@ export default function TransactionsTable() {
                      <div className="text-center text-destructive p-4 border border-destructive/50 bg-destructive/10 rounded-md">
                         <p className="font-bold">Could not load transactions.</p>
                         <p className="text-sm mt-2">
-                            There was an error fetching the transaction data. Please check your connection and permissions.
+                            This feature requires a database configuration. A link to create it may have been printed in your browser's developer console. Please open the console, click the link, and then refresh this page.
                         </p>
                         <p className="text-xs mt-2 font-mono">{error.message}</p>
                     </div>
@@ -172,6 +112,7 @@ export default function TransactionsTable() {
                     <TableHead>Transaction ID</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Screenshot</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
                     <TableHead className="text-right">Status</TableHead>
                     {list[0]?.status === 'pending' && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
@@ -203,6 +144,7 @@ export default function TransactionsTable() {
                                 'None'
                             )}
                         </TableCell>
+                        <TableCell className="text-right font-semibold">{tx.amount.toLocaleString()} SSP</TableCell>
                         <TableCell className="text-right"><StatusBadge status={tx.status} /></TableCell>
                         {tx.status === 'pending' && (
                              <TableCell className="text-right space-x-2">
@@ -213,7 +155,7 @@ export default function TransactionsTable() {
                                     onClick={() => handleUpdateStatus(tx.userId, tx.id, 'approved')}
                                     disabled={updatingId === tx.id}
                                 >
-                                    <Check className="h-4 w-4" />
+                                    {updatingId === tx.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                                 </Button>
                                 <Button
                                     size="icon"
@@ -222,7 +164,7 @@ export default function TransactionsTable() {
                                     onClick={() => handleUpdateStatus(tx.userId, tx.id, 'rejected')}
                                     disabled={updatingId === tx.id}
                                 >
-                                    <X className="h-4 w-4" />
+                                     {updatingId === tx.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
                                 </Button>
                             </TableCell>
                         )}

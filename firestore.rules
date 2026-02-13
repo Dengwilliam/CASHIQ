@@ -7,6 +7,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // This allows admins to query the 'payment-transactions' collection group across all users.
+    match /{path=**}/payment-transactions/{transactionId} {
+        allow list: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
     match /users/{userId} {
       allow get: if request.auth.uid == userId || exists(/databases/$(database)/documents/admins/$(request.auth.uid));
       allow list: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
@@ -16,10 +21,10 @@ service cloud.firestore {
       );
       allow delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
 
-        // Payment Transactions subcollection
+        // Payment Transactions subcollection for direct access
         match /payment-transactions/{transactionId} {
             allow create: if request.auth.uid == userId;
-            allow list, read: if request.auth.uid == userId || exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+            allow read: if request.auth.uid == userId || exists(/databases/$(database)/documents/admins/$(request.auth.uid));
             allow update, delete: if exists(/databases/$(database)/documents/admins/$(request.auth.uid));
         }
     }
