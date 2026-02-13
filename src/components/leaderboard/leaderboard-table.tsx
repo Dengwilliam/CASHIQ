@@ -1,25 +1,15 @@
 'use client';
 
 import { useMemo } from 'react';
-import { collection, query, where, type Timestamp } from 'firebase/firestore';
-import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { useUser } from '@/firebase';
 import { format } from 'date-fns';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Crown } from 'lucide-react';
+import { useLeaderboardScores } from '@/hooks/useLeaderboardScores';
 
-type ScoreEntry = {
-  id: string;
-  playerName: string;
-  score: number;
-  createdAt: Timestamp;
-  userId: string;
-  rank?: number;
-};
-
-type Admin = { id: string; };
 
 const prizeDistribution: { [key: number]: number } = {
   1: 0.30, // 30%
@@ -52,57 +42,22 @@ type LeaderboardTableProps = {
 };
 
 export default function LeaderboardTable({ week }: LeaderboardTableProps) {
-  const firestore = useFirestore();
   const { user } = useUser();
+  const { rankedScores, loading, error } = useLeaderboardScores(week);
 
-  const scoresQuery = useMemoFirebase(() => {
-    if (!firestore || !week) return null;
-    return query(
-        collection(firestore, 'scores'), 
-        where('createdAt', '>=', week.start),
-        where('createdAt', '<=', week.end)
-    );
-  }, [firestore, week]);
-
-  const adminsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'admins'));
-  }, [firestore]);
-
-  const { data: allScores, loading: scoresLoading, error: scoresError } = useCollection<ScoreEntry>(scoresQuery);
-  const { data: admins, loading: adminsLoading, error: adminsError } = useCollection<Admin>(adminsQuery);
-  
   const { topScores, currentUserRank, isUserInTop10 } = useMemo(() => {
-    if (scoresLoading || adminsLoading || !allScores || !admins) {
-        return { topScores: [], currentUserRank: null, isUserInTop10: false };
-    }
-
-    const adminIds = new Set(admins.map(admin => admin.id));
-    const nonAdminScores = allScores.filter(score => !adminIds.has(score.userId));
-
-    const rankedScores = [...nonAdminScores]
-      .sort((a, b) => {
-        if (a.score !== b.score) {
-          return b.score - a.score;
-        }
-        return a.createdAt.toMillis() - b.createdAt.toMillis();
-      })
-      .map((score, index) => ({ ...score, rank: index + 1 }));
-    
     const topScores = rankedScores.slice(0, 10);
-
+    
     let currentUserRankData = null;
     if (user) {
         currentUserRankData = rankedScores.find(score => score.userId === user.uid) || null;
     }
 
-    const isUserInTop10 = !!(currentUserRankData && currentUserRankData.rank <= 10);
+    const isUserInTop10 = !!(currentUserRankData && currentUserRankData.rank && currentUserRankData.rank <= 10);
 
     return { topScores, currentUserRank: currentUserRankData, isUserInTop10 };
-  }, [allScores, admins, user, scoresLoading, adminsLoading]);
+  }, [rankedScores, user]);
 
-  const loading = scoresLoading || adminsLoading;
-  const error = scoresError || adminsError;
 
   const getPrizePercentage = (rank: number) => {
     const percentage = prizeDistribution[rank];

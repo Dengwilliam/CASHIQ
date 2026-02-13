@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { saveScore } from "@/lib/scores";
 import { generateQuiz } from "@/ai/flows/generate-quiz-flow";
-import { generateDailyQuiz } from "@/ai/flows/generate-daily-quiz-flow";
 import { generateExplanation } from "@/ai/flows/generate-explanation-flow";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -83,10 +82,10 @@ export default function Home() {
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>(userProfileRef);
 
   useEffect(() => {
-    if (!adminLoading && isAdmin) {
+    if (!userLoading && !adminLoading && isAdmin) {
       router.push('/admin');
     }
-  }, [isAdmin, adminLoading, router]);
+  }, [isAdmin, userLoading, adminLoading, router]);
 
   useEffect(() => {
     // Check if onboarding tour should be shown for new users.
@@ -478,7 +477,7 @@ export default function Home() {
     
     setIsGeneratingQuiz(true);
     try {
-      const quizOutput = await generateDailyQuiz({ count: DAILY_QUESTIONS_PER_GAME });
+      const quizOutput = await generateQuiz({ count: DAILY_QUESTIONS_PER_GAME, difficulty: 'easy', isDailyChallenge: true });
       const questionsWithShuffledAnswers = quizOutput.questions.map(q => ({
         ...q,
         answers: shuffleArray(q.answers)

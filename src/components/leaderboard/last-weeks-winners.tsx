@@ -1,23 +1,12 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, type Timestamp } from 'firebase/firestore';
 import { subWeeks, startOfWeek, endOfWeek, format } from 'date-fns';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Crown } from 'lucide-react';
-
-type ScoreEntry = {
-  id: string;
-  playerName: string;
-  score: number;
-  createdAt: Timestamp;
-  userId: string;
-};
-
-type Admin = { id: string; };
+import { useLeaderboardScores } from '@/hooks/useLeaderboardScores';
 
 function WinnersSkeleton() {
     return (
@@ -34,8 +23,6 @@ function WinnersSkeleton() {
 }
 
 export default function LastWeeksWinners() {
-  const firestore = useFirestore();
-
   const lastWeek = useMemo(() => {
     const today = new Date();
     const lastWeekDate = subWeeks(today, 1);
@@ -44,38 +31,12 @@ export default function LastWeeksWinners() {
     return { start, end };
   }, []);
 
-  const scoresQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(
-        collection(firestore, 'scores'), 
-        where('createdAt', '>=', lastWeek.start),
-        where('createdAt', '<=', lastWeek.end)
-    );
-  }, [firestore, lastWeek]);
-  
-  const adminsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'admins'));
-  }, [firestore]);
-
-  const { data: allScores, loading: scoresLoading } = useCollection<ScoreEntry>(scoresQuery);
-  const { data: admins, loading: adminsLoading } = useCollection<Admin>(adminsQuery);
+  const { rankedScores, loading } = useLeaderboardScores(lastWeek);
   
   const winners = useMemo(() => {
-    if (!allScores || !admins) return null;
-
-    const adminIds = new Set(admins.map(admin => admin.id));
-    const nonAdminScores = allScores.filter(score => !adminIds.has(score.userId));
-
-    return [...nonAdminScores]
-      .sort((a, b) => {
-        if (a.score !== b.score) return b.score - a.score;
-        return a.createdAt.toMillis() - b.createdAt.toMillis();
-      })
-      .slice(0, 4);
-  }, [allScores, admins]);
-
-  const loading = scoresLoading || adminsLoading;
+    if (!rankedScores) return null;
+    return rankedScores.slice(0, 4);
+  }, [rankedScores]);
 
   const getRankIcon = (rank: number) => {
     const colors = ['text-yellow-400', 'text-slate-400', 'text-orange-400'];
@@ -108,11 +69,11 @@ export default function LastWeeksWinners() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {winners && winners.map((winner, index) => (
+              {winners && winners.map((winner) => (
                 <TableRow key={winner.id} className="font-semibold">
                   <TableCell>
                     <div className="flex items-center justify-center">
-                      {getRankIcon(index + 1)}
+                      {getRankIcon(winner.rank || 0)}
                     </div>
                   </TableCell>
                   <TableCell>{winner.playerName}</TableCell>

@@ -24,6 +24,7 @@ const QuestionSchema = z.object({
 const QuizInputSchema = z.object({
   count: z.number().describe('The number of questions to generate.'),
   difficulty: z.enum(['easy', 'medium', 'hard']).describe('The difficulty of the questions.'),
+  isDailyChallenge: z.boolean().optional().describe('If true, generate a short, fun daily challenge quiz with easy difficulty.'),
 });
 export type QuizInput = z.infer<typeof QuizInputSchema>;
 
@@ -42,8 +43,14 @@ const prompt = ai.definePrompt({
   input: { schema: QuizInputSchema },
   output: { schema: QuizOutputSchema },
   prompt: `You are an expert in finance and creating educational content. 
+  
+  {{#if isDailyChallenge}}
+  Generate a short, fun quiz with {{count}} multiple-choice questions about finance, crypto, blockchain, stocks, and bonds.
+  The difficulty of the questions should be easy. These are for a quick daily challenge.
+  {{else}}
   Generate a quiz with {{count}} multiple-choice questions about finance, crypto, blockchain, stocks, and bonds.
   The difficulty of the questions should be {{difficulty}}.
+  {{/if}}
   
   For each question, provide exactly 4 answer options, and ensure that only one of them is correct.
   
