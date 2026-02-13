@@ -67,10 +67,6 @@
             "type": "string"
           }
         },
-        "momoNumber": {
-          "type": "string",
-          "description": "The user's MTN MoMo number for receiving payments."
-        },
         "consecutiveWeeksPlayed": {
           "type": "number",
           "description": "The number of consecutive weeks the user has played."
@@ -90,50 +86,6 @@
         }
       },
       "required": ["uid", "displayName", "email"]
-    },
-    "paymentTransaction": {
-      "title": "Payment Transaction",
-      "description": "Represents a manual payment transaction submitted by a user.",
-      "type": "object",
-      "properties": {
-        "userId": {
-          "type": "string",
-          "description": "The ID of the user who made the payment."
-        },
-        "playerName": {
-          "type": "string",
-          "description": "The display name of the user who made the payment."
-        },
-        "momoTransactionId": {
-          "type": "string",
-          "description": "The MTN MoMo transaction ID provided by the user."
-        },
-        "amount": {
-          "type": "number",
-          "description": "The amount paid."
-        },
-        "status": {
-          "type": "string",
-          "description": "The status of the payment.",
-          "enum": ["pending", "approved", "rejected"]
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The timestamp of when the payment proof was submitted."
-        },
-        "screenshotUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "Data URI of the uploaded screenshot for payment proof."
-        },
-        "entryType": {
-          "type": "string",
-          "description": "The method used for the entry fee.",
-          "enum": ["cash", "coins"]
-        }
-      },
-      "required": ["userId", "momoTransactionId", "amount", "status", "createdAt", "playerName"]
     },
     "prizePool": {
       "title": "Prize Pool",
@@ -174,12 +126,6 @@
         "$ref": "#/backend/entities/userProfile"
       },
       "description": "Stores user profile information."
-    },
-    "/users/{userId}/payment-transactions/{transactionId}": {
-      "schema": {
-        "$ref": "#/backend/entities/paymentTransaction"
-      },
-      "description": "Stores user-submitted payment transactions for a specific user."
     },
     "/prizePools/{weekId}": {
       "schema": {

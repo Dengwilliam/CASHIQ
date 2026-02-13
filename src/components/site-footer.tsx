@@ -36,8 +36,8 @@ export default function SiteFooter() {
                 <Link href="/leaderboard" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                     Leaderboard
                 </Link>
-                <Link href="/wallet" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                    My Wallet
+                <Link href="/profile" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    My Profile
                 </Link>
             </nav>
         </div>

@@ -10,18 +10,15 @@ import LivePrizePool from '@/components/live-prize-pool';
 type StartScreenProps = {
   onStartWeekly: () => void;
   onStartDaily: () => void;
-  onPayWithCoins: () => void;
   user: User | null;
   loading: boolean;
   hasPlayedThisWeek: boolean | null;
   isGeneratingQuiz: boolean;
-  hasApprovedPaymentThisWeek: boolean | null;
   hasPlayedDailyToday: boolean | null;
   coinBalance: number;
-  isPayingWithCoins: boolean;
 };
 
-export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoins, user, loading, hasPlayedThisWeek, isGeneratingQuiz, hasApprovedPaymentThisWeek, hasPlayedDailyToday, coinBalance, isPayingWithCoins }: StartScreenProps) {
+export default function StartScreen({ onStartWeekly, onStartDaily, user, loading, hasPlayedThisWeek, isGeneratingQuiz, hasPlayedDailyToday, coinBalance }: StartScreenProps) {
   
   const renderWeeklyFooter = () => {
     if (loading) {
@@ -31,14 +28,6 @@ export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoin
           Checking your status...
         </Button>
       );
-    }
-     if (isGeneratingQuiz) {
-        return (
-            <Button className="w-full" size="lg" disabled>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Generating Your Quiz...
-            </Button>
-        );
     }
     if (!user) {
       return (
@@ -57,48 +46,17 @@ export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoin
         </Button>
       );
     }
-    if (!hasApprovedPaymentThisWeek) {
-      return (
-        <div className="w-full flex flex-col items-center gap-3">
-            <Button asChild className="w-full" size="lg">
-                <Link href="/wallet">
-                    <Wallet className="mr-2 h-5 w-5" />
-                    Pay with MoMo
-                </Link>
-            </Button>
-            <div className="relative w-full flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">
-                        Or
-                    </span>
-                </div>
-            </div>
-            <Button 
-                onClick={onPayWithCoins}
-                className="w-full" 
-                size="lg" 
-                variant="secondary"
-                disabled={isPayingWithCoins || coinBalance < 1000}
-            >
-                {isPayingWithCoins ? (
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                ) : (
-                    <Coins className="mr-2 h-5 w-5" />
-                )}
-                {coinBalance < 1000 ? `Not Enough Coins (${coinBalance})` : `Use 1,000 Coins`}
-            </Button>
-        </div>
-      );
-    }
+    
+    const canAfford = coinBalance >= 1000;
     return (
-       <Button onClick={onStartWeekly} className="w-full" size="lg" disabled={isGeneratingQuiz}>
+      <div className="w-full flex flex-col items-center gap-2">
+        <Button onClick={onStartWeekly} className="w-full" size="lg" disabled={!canAfford || isGeneratingQuiz}>
+          {isGeneratingQuiz ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Trophy className="mr-2 h-5 w-5" />}
           Start Weekly Challenge
-          <ArrowRight className="ml-2 h-5 w-5" />
         </Button>
-    )
+        {!canAfford && <p className="text-xs text-center text-destructive">You need 1,000 coins to enter. You have {coinBalance}.</p>}
+      </div>
+    );
   }
 
   const renderDailyFooter = () => {
@@ -161,7 +119,7 @@ export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoin
                     <p className="text-muted-foreground">Top 4 players win a share of the total weekly prize pool!</p>
                      <div className="text-center p-4 bg-background/50 rounded-lg">
                         <p className="text-sm text-muted-foreground">Entry Fee</p>
-                        <p className="text-2xl font-bold text-primary">25,000 SSP or 1,000 Coins</p>
+                        <p className="text-2xl font-bold text-primary flex items-center justify-center gap-2">1,000 <Coins className="h-6 w-6 text-accent" /></p>
                     </div>
                 </div>
                 {renderWeeklyFooter()}

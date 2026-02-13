@@ -68,7 +68,6 @@ export default function SignUpPage() {
         email: values.email,
         photoURL: avatarUrl,
         badges: [], // Add empty badges array
-        momoNumber: '', // Initialize empty MoMo number
         consecutiveWeeksPlayed: 0,
         lastPlayTimestamp: null,
         hasCompletedOnboarding: false,

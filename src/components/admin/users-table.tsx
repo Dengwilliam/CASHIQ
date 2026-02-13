@@ -14,7 +14,6 @@ type UserProfile = {
     id: string;
     displayName: string;
     email: string;
-    momoNumber?: string;
 };
 
 type Admin = {
@@ -73,7 +72,7 @@ export default function UsersTable() {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-3"><Users /> User Payout Information</CardTitle>
+                    <CardTitle className="flex items-center gap-3"><Users /> User Information</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                     <div className="text-center text-destructive p-4 border border-destructive/50 bg-destructive/10 rounded-md">
@@ -89,8 +88,8 @@ export default function UsersTable() {
         <>
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-3"><Users /> User Payout Information</CardTitle>
-                    <CardDescription>A list of all users and their registered MoMo numbers for payouts.</CardDescription>
+                    <CardTitle className="flex items-center gap-3"><Users /> User Information</CardTitle>
+                    <CardDescription>A list of all non-admin users in the application.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {loading ? <TableSkeleton /> : nonAdminUsers && nonAdminUsers.length > 0 ? (
@@ -99,7 +98,6 @@ export default function UsersTable() {
                                 <TableRow>
                                     <TableHead>Display Name</TableHead>
                                     <TableHead>Email</TableHead>
-                                    <TableHead>MoMo Number</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -108,7 +106,6 @@ export default function UsersTable() {
                                     <TableRow key={user.id}>
                                         <TableCell className="font-medium">{user.displayName}</TableCell>
                                         <TableCell>{user.email}</TableCell>
-                                        <TableCell className="font-mono text-sm">{user.momoNumber || 'Not set'}</TableCell>
                                         <TableCell className="text-right">
                                             <Button variant="outline" size="sm" onClick={() => setSelectedUserId(user.id)}>
                                                 View Profile

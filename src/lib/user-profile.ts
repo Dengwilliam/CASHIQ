@@ -6,7 +6,6 @@ export type UserProfile = {
     email: string;
     photoURL?: string;
     badges?: string[];
-    momoNumber?: string;
     consecutiveWeeksPlayed?: number;
     lastPlayTimestamp?: Timestamp;
     hasCompletedOnboarding?: boolean;

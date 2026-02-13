@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { collection, query, where, getDocs, type Timestamp, doc, updateDoc, arrayUnion, getDoc, serverTimestamp, type DocumentData, increment, addDoc } from 'firebase/firestore';
-import { startOfWeek, endOfWeek, isMonday, isSameWeek, subWeeks, isToday } from 'date-fns';
+import { collection, query, where, getDocs, type Timestamp, doc, updateDoc, arrayUnion, getDoc, serverTimestamp, type DocumentData, increment, runTransaction } from 'firebase/firestore';
+import { startOfWeek, endOfWeek, isMonday, isSameWeek, subWeeks, isToday, format } from 'date-fns';
 
 import StartScreen from "@/components/quiz/start-screen";
 import QuizScreen from "@/components/quiz/quiz-screen";
@@ -37,6 +37,7 @@ const WEEKLY_QUESTIONS_PER_GAME = 20;
 const DAILY_QUESTIONS_PER_GAME = 5;
 const COINS_PER_CORRECT_ANSWER = 5;
 const WEEKLY_ENTRY_COIN_COST = 1000;
+const WEEKLY_PRIZE_CONTRIBUTION = 25000; // SSP equivalent of 1000 coins
 
 
 // Utility to shuffle an array
@@ -52,12 +53,9 @@ export default function Home() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [hasPlayedThisWeek, setHasPlayedThisWeek] = useState<boolean | null>(null);
   const [checkingForPastScore, setCheckingForPastScore] = useState(true);
-  const [hasApprovedPaymentThisWeek, setHasApprovedPaymentThisWeek] = useState<boolean | null>(null);
-  const [isCheckingPayment, setIsCheckingPayment] = useState(true);
   const [hasPlayedDailyToday, setHasPlayedDailyToday] = useState<boolean | null>(null);
   const [isCheckingDaily, setIsCheckingDaily] = useState(true);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
-  const [isPayingWithCoins, setIsPayingWithCoins] = useState(false);
   const [newlyAwardedBadges, setNewlyAwardedBadges] = useState<string[]>([]);
   const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>([]);
   const [hotStreak, setHotStreak] = useState(0);
@@ -113,7 +111,7 @@ export default function Home() {
   }, [toast]);
 
   const setupWeeklyQuiz = useCallback(async () => {
-    setIsGeneratingQuiz(true);
+    // isGeneratingQuiz is set true before calling this
     try {
       const quizOutput = await generateQuiz({ count: WEEKLY_QUESTIONS_PER_GAME, difficulty: 'medium' });
       const questionsWithShuffledAnswers = quizOutput.questions.map(q => ({
@@ -322,49 +320,6 @@ export default function Home() {
   }, [user, firestore, gameState]);
 
   useEffect(() => {
-    const checkUserPayment = () => {
-        if (!firestore || !user) {
-            setHasApprovedPaymentThisWeek(false);
-            setIsCheckingPayment(false);
-            return;
-        }
-        setIsCheckingPayment(true);
-
-        const today = new Date();
-        const start = startOfWeek(today, { weekStartsOn: 1 });
-        const end = endOfWeek(today, { weekStartsOn: 1 });
-
-        const paymentsQuery = query(
-            collection(firestore, 'users', user.uid, 'payment-transactions'),
-            where('status', '==', 'approved')
-        );
-
-        getDocs(paymentsQuery).then(querySnapshot => {
-            const approvedPaymentsThisWeek = querySnapshot.docs.filter(doc => {
-                const paymentData = doc.data();
-                if (paymentData.createdAt) {
-                    const paymentDate = (paymentData.createdAt as Timestamp).toDate();
-                    return paymentDate >= start && paymentDate <= end;
-                }
-                return false;
-            });
-            setHasApprovedPaymentThisWeek(approvedPaymentsThisWeek.length > 0);
-        }).catch(error => {
-            const permissionError = new FirestorePermissionError({
-                path: `users/${user.uid}/payment-transactions`,
-                operation: 'list',
-            });
-            errorEmitter.emit('permission-error', permissionError);
-            setHasApprovedPaymentThisWeek(false);
-        }).finally(() => {
-            setIsCheckingPayment(false);
-        });
-    };
-
-    checkUserPayment();
-  }, [user, firestore, gameState]);
-  
-  useEffect(() => {
     const checkUserDailyPlay = async () => {
         if (!user || !userProfile) {
             setHasPlayedDailyToday(null);
@@ -422,18 +377,10 @@ export default function Home() {
   }, [gameState, toast, tabSwitchCount, quizType]);
 
   const handleStartWeeklyQuiz = async () => {
-    if (!user) {
+    if (!user || !firestore) {
       toast({
         title: "Please log in",
         description: "You must be logged in to start the quiz.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (!hasApprovedPaymentThisWeek) {
-      toast({
-        title: "Payment Not Approved",
-        description: "Your entry fee for this week has not been approved yet. Please check your wallet.",
         variant: "destructive",
       });
       return;
@@ -446,16 +393,71 @@ export default function Home() {
       });
       return;
     }
-    setScore(0);
-    setCurrentQuestionIndex(0);
-    setNewlyAwardedBadges([]);
-    setAnsweredQuestions([]);
-    setHotStreak(0);
-    setMaxHotStreak(0);
-    setTabSwitchCount(0);
-    setIsDisqualified(false);
-    setQuizType('weekly');
-    await setupWeeklyQuiz();
+    if ((userProfile?.coins ?? 0) < WEEKLY_ENTRY_COIN_COST) {
+        toast({
+            title: 'Not enough coins',
+            description: `You need ${WEEKLY_ENTRY_COIN_COST} coins to enter the weekly challenge.`,
+            variant: 'destructive',
+        });
+        return;
+    }
+
+    setIsGeneratingQuiz(true); // To show loading state
+
+    const userRef = doc(firestore, 'users', user.uid);
+    const today = new Date();
+    const weekStartDate = startOfWeek(today, { weekStartsOn: 1 });
+    const weekId = format(weekStartDate, 'yyyy-MM-dd');
+    const prizePoolRef = doc(firestore, 'prizePools', weekId);
+
+    try {
+        await runTransaction(firestore, async (transaction) => {
+            const userDoc = await transaction.get(userRef);
+            if (!userDoc.exists() || (userDoc.data().coins ?? 0) < WEEKLY_ENTRY_COIN_COST) {
+                throw new Error('Insufficient coins.');
+            }
+
+            // 1. Decrement user coins
+            transaction.update(userRef, { coins: increment(-WEEKLY_ENTRY_COIN_COST) });
+
+            // 2. Increment prize pool
+            const prizePoolDoc = await transaction.get(prizePoolRef);
+            if (!prizePoolDoc.exists()) {
+                transaction.set(prizePoolRef, {
+                    total: WEEKLY_PRIZE_CONTRIBUTION,
+                    startDate: weekStartDate,
+                });
+            } else {
+                transaction.update(prizePoolRef, { total: increment(WEEKLY_PRIZE_CONTRIBUTION) });
+            }
+        });
+
+        // If transaction succeeds, start the quiz
+        toast({
+            title: 'Success!',
+            description: 'You have entered the weekly challenge.',
+        });
+
+        setScore(0);
+        setCurrentQuestionIndex(0);
+        setNewlyAwardedBadges([]);
+        setAnsweredQuestions([]);
+        setHotStreak(0);
+        setMaxHotStreak(0);
+        setTabSwitchCount(0);
+        setIsDisqualified(false);
+        setQuizType('weekly');
+        await setupWeeklyQuiz();
+
+    } catch (error: any) {
+        console.error("Weekly quiz entry transaction failed:", error);
+        toast({
+            title: "Entry Failed",
+            description: error.message || "Could not process your entry. Please try again.",
+            variant: "destructive",
+        });
+        setIsGeneratingQuiz(false);
+    }
   };
 
   const handleStartDailyQuiz = async () => {
@@ -495,57 +497,6 @@ export default function Home() {
     } finally {
       setIsGeneratingQuiz(false);
     }
-  };
-
-  const handlePayWithCoins = () => {
-    if (!firestore || !user || !userProfile) return;
-
-    if ((userProfile.coins ?? 0) < WEEKLY_ENTRY_COIN_COST) {
-        toast({
-            title: 'Not enough coins',
-            description: `You need ${WEEKLY_ENTRY_COIN_COST} coins to enter the weekly challenge.`,
-            variant: 'destructive',
-        });
-        return;
-    }
-
-    setIsPayingWithCoins(true);
-    const userRef = doc(firestore, 'users', user.uid);
-    
-    updateDoc(userRef, { coins: increment(-WEEKLY_ENTRY_COIN_COST) })
-        .then(() => {
-            const transactionsCollection = collection(firestore, 'users', user.uid, 'payment-transactions');
-            const coinTransactionData = {
-                userId: user.uid,
-                playerName: user.displayName || 'Anonymous',
-                momoTransactionId: `COIN_ENTRY_${new Date().getTime()}`,
-                amount: 0,
-                status: 'approved' as const,
-                createdAt: serverTimestamp(),
-                entryType: 'coins' as const,
-            };
-            return addDoc(transactionsCollection, coinTransactionData);
-        })
-        .then(() => {
-            toast({
-                title: 'Success!',
-                description: 'You have entered the weekly challenge using your coins.',
-            });
-            setHasApprovedPaymentThisWeek(true);
-        })
-        .catch((error) => {
-            console.error("Error paying with coins:", error);
-            toast({
-                title: 'Error',
-                description: 'Something went wrong. Your coins have been refunded.',
-                variant: 'destructive',
-            });
-            // Refund coins if the second part fails
-            updateDoc(userRef, { coins: increment(WEEKLY_ENTRY_COIN_COST) });
-        })
-        .finally(() => {
-            setIsPayingWithCoins(false);
-        });
   };
 
   const handleAnswer = async (answer: Answer) => {
@@ -644,15 +595,12 @@ export default function Home() {
         return <StartScreen 
                   onStartWeekly={handleStartWeeklyQuiz}
                   onStartDaily={handleStartDailyQuiz}
-                  onPayWithCoins={handlePayWithCoins}
                   user={user} 
-                  loading={userLoading || checkingForPastScore || isCheckingPayment || isCheckingDaily}
+                  loading={userLoading || checkingForPastScore || isCheckingDaily}
                   hasPlayedThisWeek={hasPlayedThisWeek} 
                   isGeneratingQuiz={isGeneratingQuiz}
-                  hasApprovedPaymentThisWeek={hasApprovedPaymentThisWeek}
                   hasPlayedDailyToday={hasPlayedDailyToday}
                   coinBalance={userProfile?.coins ?? 0}
-                  isPayingWithCoins={isPayingWithCoins}
                 />;
     }
   };
@@ -674,5 +622,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
