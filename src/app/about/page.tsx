@@ -1,4 +1,4 @@
-import { Landmark, WalletCards, PiggyBank, BookOpen, ShieldCheck, Zap, Handshake, Users, Gamepad2, Award, BrainCircuit, Lock } from 'lucide-react';
+import { Landmark, WalletCards, PiggyBank, BookOpen, ShieldCheck, Zap, Handshake, Users, Gamepad2, Award, BrainCircuit, Lock, Twitter, Facebook, Instagram } from 'lucide-react';
 
 export const metadata = {
   title: 'About Us | CashIQ',
@@ -106,7 +106,14 @@ export default function AboutPage() {
                 <h3 className="text-xl font-bold mb-3">Contact Us</h3>
                 <p><strong>Support:</strong> <a href="mailto:support@cashiq.com" className="text-primary hover:underline">support@cashiq.com</a></p>
                 <p><strong>Website:</strong> <a href="https://cashiq.com" className="text-primary hover:underline">cashiq.com</a></p>
-                <p className="mt-2 text-muted-foreground">Social media pages coming soon!</p>
+                <div className="mt-4">
+                    <h4 className="font-semibold mb-2 text-muted-foreground/80">Follow Us</h4>
+                    <div className="flex gap-4">
+                        <a href="#" aria-label="Twitter" className="text-muted-foreground hover:text-primary transition-colors"><Twitter className="h-6 w-6" /></a>
+                        <a href="#" aria-label="Facebook" className="text-muted-foreground hover:text-primary transition-colors"><Facebook className="h-6 w-6" /></a>
+                        <a href="#" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors"><Instagram className="h-6 w-6" /></a>
+                    </div>
+                </div>
               </div>
               <div>
                 <h3 className="text-xl font-bold mb-3">Sponsored By</h3>
