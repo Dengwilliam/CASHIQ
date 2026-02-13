@@ -86,12 +86,12 @@ export const updateTransactionStatus = (
                 return;
             }
 
-            const subject = `Your CapitalQuiz Payment has been ${status}`;
+            const subject = `Your CashIQ Payment has been ${status}`;
             const htmlBody = `
                 <p>Hello ${userData.displayName},</p>
-                <p>Your payment for the CapitalQuiz Challenge (Transaction ID: ${transactionData.momoTransactionId}) has been <strong>${status}</strong>.</p>
+                <p>Your payment for CashIQ (Transaction ID: ${transactionData.momoTransactionId}) has been <strong>${status}</strong>.</p>
                 ${status === 'approved' ? '<p>You can now head to the app and play this week\'s quiz. Good luck!</p>' : '<p>If you believe this was a mistake, please contact support.</p>'}
-                <p>Thanks,<br/>The CapitalQuiz Challenge Team</p>
+                <p>Thanks,<br/>The CashIQ Team</p>
             `;
 
             fetch('/api/send-email', {

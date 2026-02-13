@@ -42,7 +42,7 @@ The text color is a light off-white (#DCDAE1).
 
 The SVG should include:
 1.  A background rectangle with the dark charcoal color and rounded corners (rx="16").
-2.  The app title "CapitalQuiz Challenge" at the top, perhaps with the accent color.
+2.  The app title "CashIQ" at the top, perhaps with the accent color.
 3.  The player's name: "{{playerName}}".
 4.  The final score: "{{score}}". This should be the most prominent element.
 5.  A label indicating if it's the "Weekly Score" or "Daily Coins Earned", based on the quizType: "{{quizType}}".

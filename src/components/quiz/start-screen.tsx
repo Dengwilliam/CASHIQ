@@ -160,7 +160,7 @@ export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoin
           Learn. Play. Earn.
         </h1>
         <p className="text-base sm:text-lg text-foreground/80 pt-2 max-w-2xl mx-auto">
-          Gamified financial literacy with weekly cash rewards and daily coin prizes.
+          Quiz Smart. Win Big.
         </p>
         {user && (
             <div className="text-base pt-4">

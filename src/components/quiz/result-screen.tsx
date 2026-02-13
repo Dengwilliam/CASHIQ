@@ -70,15 +70,15 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
   };
 
   const shareText = isWeekly 
-    ? `I scored ${score} on CapitalQuiz Challenge! Can you beat my score?`
-    : `I just completed my daily quiz on CapitalQuiz Challenge!`;
+    ? `I scored ${score} on CashIQ! Can you beat my score?`
+    : `I just completed my daily quiz on CashIQ!`;
 
   const handleDownload = () => {
     if (!shareImageSvg) return;
     const dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(shareImageSvg)));
     const a = document.createElement('a');
     a.href = dataUrl;
-    a.download = 'capital-quiz-result.svg';
+    a.download = 'cashiq-result.svg';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -94,7 +94,7 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
       try {
         await navigator.share({
           files: [file],
-          title: 'My CapitalQuiz Score!',
+          title: 'My CashIQ Score!',
           text: shareText,
         });
       } catch (error) {

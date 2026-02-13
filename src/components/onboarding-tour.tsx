@@ -26,7 +26,7 @@ type OnboardingTourProps = {
 const tourSteps = [
   {
     icon: PartyPopper,
-    title: 'Welcome to FinQuiz Challenge!',
+    title: 'Welcome to CashIQ!',
     description: "Let's quickly walk through how everything works.",
   },
   {
@@ -59,12 +59,17 @@ export default function OnboardingTour({ open, onOpenChange }: OnboardingTourPro
       return;
     }
 
-    setCurrentStep(api.selectedScrollSnap());
-
     api.on('select', () => {
       setCurrentStep(api.selectedScrollSnap());
     });
   }, [api]);
+  
+  useEffect(() => {
+    if(open) {
+      setCurrentStep(0);
+      api?.scrollTo(0, true);
+    }
+  }, [open, api]);
 
   const handleFinish = async () => {
     if (!user || !firestore) return;
@@ -93,7 +98,12 @@ export default function OnboardingTour({ open, onOpenChange }: OnboardingTourPro
         description: serverError.message || 'Could not save your progress. Please try again.',
         variant: 'destructive',
       });
-      setIsFinishing(false);
+    } finally {
+        // Only set to false if it's still finishing. This avoids race conditions
+        // where the success callback already triggered the onOpenChange.
+        if (isFinishing) {
+          setIsFinishing(false);
+        }
     }
   };
 
@@ -113,7 +123,7 @@ export default function OnboardingTour({ open, onOpenChange }: OnboardingTourPro
                      <step.icon className="h-20 w-20 text-primary" />
                   </div>
                   <h3 className="text-xl font-semibold mt-4">{step.title}</h3>
-                  <p className="text-muted-foreground mt-2 max-w-xs mx-auto">{step.description}</p>
+                  <p className="text-muted-foreground mt-2 max-w-xs mx-auto text-center">{step.description}</p>
                 </div>
               </CarouselItem>
             ))}

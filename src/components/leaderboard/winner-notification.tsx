@@ -94,12 +94,12 @@ export default function WinnerNotification() {
           });
 
           // Also send an email
-          const subject = "Congratulations! You're a CapitalQuiz Winner!";
+          const subject = "Congratulations! You're a CashIQ Winner!";
           const htmlBody = `
               <p>Hello ${user.displayName},</p>
-              <p>Congratulations! You ranked <strong>${rank}${rankSuffix}</strong> on last week's CapitalQuiz leaderboard with an amazing score of ${currentUserWinner.score}.</p>
+              <p>Congratulations! You ranked <strong>${rank}${rankSuffix}</strong> on last week's CashIQ leaderboard with an amazing score of ${currentUserWinner.score}.</p>
               <p>Your prize money should be sent to your registered MoMo number shortly. Keep an eye out for it!</p>
-              <p>Thanks for playing,<br/>The CapitalQuiz Challenge Team</p>
+              <p>Thanks for playing,<br/>The CashIQ Team</p>
           `;
           fetch('/api/send-email', {
               method: 'POST',

@@ -6,8 +6,8 @@ import SiteFooter from '@/components/site-footer';
 import SiteHeader from '@/components/site-header';
 
 export const metadata: Metadata = {
-  title: 'CapitalQuiz Challenge',
-  description: 'Gamified financial literacy with weekly cash rewards',
+  title: 'CashIQ',
+  description: 'Quiz Smart. Win Big.',
 };
 
 export default function RootLayout({

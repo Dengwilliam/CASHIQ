@@ -1,7 +1,7 @@
 import { Landmark, WalletCards, PiggyBank, BookOpen, ShieldCheck, Zap, Handshake, Users, Gamepad2, Award, BrainCircuit, Lock } from 'lucide-react';
 
 export const metadata = {
-  title: 'About Us | CapitalQuiz Challenge',
+  title: 'About Us | CashIQ',
 };
 
 export default function AboutPage() {
@@ -27,7 +27,7 @@ export default function AboutPage() {
       <div className="mx-auto max-w-4xl space-y-16">
         <header className="text-center">
           <h1 className="text-4xl font-black tracking-tight text-primary sm:text-5xl">
-            About CapitalQuiz Challenge
+            About CashIQ
           </h1>
           <p className="mt-4 text-lg text-foreground/80 max-w-2xl mx-auto">
             Empowering people to learn finance through fun, competition, and rewards.
@@ -37,7 +37,7 @@ export default function AboutPage() {
         <section id="mission">
           <h2 className="text-3xl font-bold tracking-tight mb-4 text-center">Our Mission</h2>
           <p className="text-base text-foreground/80 text-center max-w-3xl mx-auto">
-            At CapitalQuiz Challenge, our mission is to improve financial literacy by making learning simple, exciting, and rewarding. We believe that everyone deserves access to financial knowledge — and we’re using gamification to make that possible.
+            At CashIQ, our mission is to improve financial literacy by making learning simple, exciting, and rewarding. We believe that everyone deserves access to financial knowledge — and we’re using gamification to make that possible.
           </p>
         </section>
 
@@ -51,7 +51,7 @@ export default function AboutPage() {
         <section id="why-we-built-this">
           <h2 className="text-3xl font-bold tracking-tight mb-4 text-center">Why We Built This</h2>
           <p className="text-base text-foreground/80 text-center max-w-3xl mx-auto">
-            Many young people want to learn how to manage money, invest, budget, and plan for the future — but traditional education is often boring, confusing, or inaccessible. CapitalQuiz Challenge was created to close this gap by delivering bite-sized financial knowledge in an entertaining and interactive way.
+            Many young people want to learn how to manage money, invest, budget, and plan for the future — but traditional education is often boring, confusing, or inaccessible. CashIQ was created to close this gap by delivering bite-sized financial knowledge in an entertaining and interactive way.
           </p>
         </section>
 
@@ -94,7 +94,7 @@ export default function AboutPage() {
         <section id="founder">
           <h2 className="text-3xl font-bold tracking-tight mb-4 text-center">Meet the Founder</h2>
           <p className="text-base text-foreground/80 text-center">
-            Founded by [Founder's Name], CapitalQuiz Challenge was built from a passion to improve financial knowledge in a fun and accessible way.
+            Founded by [Founder's Name], CashIQ was built from a passion to improve financial knowledge in a fun and accessible way.
           </p>
         </section>
 
@@ -104,8 +104,8 @@ export default function AboutPage() {
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
                 <h3 className="text-xl font-bold mb-3">Contact Us</h3>
-                <p><strong>Support:</strong> <a href="mailto:support@finquiz.com" className="text-primary hover:underline">support@finquiz.com</a></p>
-                <p><strong>Website:</strong> <a href="https://finquiz.com" className="text-primary hover:underline">finquiz.com</a></p>
+                <p><strong>Support:</strong> <a href="mailto:support@cashiq.com" className="text-primary hover:underline">support@cashiq.com</a></p>
+                <p><strong>Website:</strong> <a href="https://cashiq.com" className="text-primary hover:underline">cashiq.com</a></p>
                 <p className="mt-2 text-muted-foreground">Social media pages coming soon!</p>
               </div>
               <div>
