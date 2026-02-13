@@ -1,7 +1,7 @@
 'use client';
 import { useMemo } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, type Timestamp } from 'firebase/firestore';
+import { collection, query, where, type Timestamp, orderBy } from 'firebase/firestore';
 
 type ScoreEntry = {
   id: string;
@@ -22,7 +22,8 @@ export function useLeaderboardScores(week: { start: Date; end: Date; } | null) {
     return query(
         collection(firestore, 'scores'), 
         where('createdAt', '>=', week.start),
-        where('createdAt', '<=', week.end)
+        where('createdAt', '<=', week.end),
+        orderBy('createdAt', 'desc')
     );
   }, [firestore, week]);
   
