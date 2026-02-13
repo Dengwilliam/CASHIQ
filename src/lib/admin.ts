@@ -3,6 +3,8 @@
 import { doc, type Firestore, runTransaction, increment, updateDoc, deleteDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { startOfWeek, format } from 'date-fns';
 
+const SSP_TO_COIN_CONVERSION_RATE = 1000 / 25000; // 1000 coins for 25000 SSP
+
 export const adjustPrizePool = async (
   db: Firestore,
   adjustmentAmount: number
@@ -85,8 +87,9 @@ export const updateTransactionStatus = async (
       transaction.update(transactionRef, { status });
 
       if (status === 'approved') {
+        const coinsToAdd = Math.round(txData.amount * SSP_TO_COIN_CONVERSION_RATE);
         transaction.update(userRef, {
-          coins: increment(txData.amount)
+          coins: increment(coinsToAdd)
         });
       }
     });

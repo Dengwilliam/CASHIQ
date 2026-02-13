@@ -48,14 +48,26 @@ export default function StartScreen({ onStartWeekly, onStartDaily, user, loading
     }
     
     const canAfford = coinBalance >= 1000;
+
+    if (!canAfford) {
+        return (
+            <div className="w-full flex flex-col items-center gap-2">
+                <Button asChild className="w-full" size="lg">
+                    <Link href="/wallet">
+                        <Wallet className="mr-2 h-5 w-5" />
+                        Fund Wallet to Play
+                    </Link>
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">You need 1,000 coins. You have {coinBalance}.</p>
+            </div>
+        )
+    }
+
     return (
-      <div className="w-full flex flex-col items-center gap-2">
-        <Button onClick={onStartWeekly} className="w-full" size="lg" disabled={!canAfford || isGeneratingQuiz}>
-          {isGeneratingQuiz ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Trophy className="mr-2 h-5 w-5" />}
-          Start Weekly Challenge
-        </Button>
-        {!canAfford && <p className="text-xs text-center text-destructive">You need 1,000 coins to enter. You have {coinBalance}.</p>}
-      </div>
+      <Button onClick={onStartWeekly} className="w-full" size="lg" disabled={isGeneratingQuiz}>
+        {isGeneratingQuiz ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Trophy className="mr-2 h-5 w-5" />}
+        Start Weekly Challenge
+      </Button>
     );
   }
 
@@ -119,7 +131,10 @@ export default function StartScreen({ onStartWeekly, onStartDaily, user, loading
                     <p className="text-muted-foreground">Top 4 players win a share of the total weekly prize pool!</p>
                      <div className="text-center p-4 bg-background/50 rounded-lg">
                         <p className="text-sm text-muted-foreground">Entry Fee</p>
-                        <p className="text-2xl font-bold text-primary flex items-center justify-center gap-2">1,000 <Coins className="h-6 w-6 text-accent" /></p>
+                        <p className="text-2xl font-bold text-primary">25,000 SSP</p>
+                        <p className="text-sm text-muted-foreground font-semibold flex items-center justify-center gap-1">
+                            (or 1,000 <Coins className="h-4 w-4 text-accent" />)
+                        </p>
                     </div>
                 </div>
                 {renderWeeklyFooter()}
