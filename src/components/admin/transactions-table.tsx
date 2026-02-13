@@ -11,12 +11,12 @@ import { updateTransactionStatus } from '@/lib/admin';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Check, X, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 type PaymentTransaction = {
     id: string;
@@ -27,19 +27,6 @@ type PaymentTransaction = {
     createdAt: Timestamp;
     screenshotUrl?: string;
     userId: string;
-};
-
-const getStatusBadge = (status: 'pending' | 'approved' | 'rejected') => {
-    switch (status) {
-        case 'pending':
-            return <Badge variant="secondary">Pending</Badge>;
-        case 'approved':
-            return <Badge className="bg-success/20 text-success-foreground border border-success/50 hover:bg-success/30">Approved</Badge>;
-        case 'rejected':
-            return <Badge variant="destructive">Rejected</Badge>;
-        default:
-            return <Badge variant="outline">{status}</Badge>;
-    }
 };
 
 function TableSkeleton() {
@@ -162,7 +149,7 @@ export default function TransactionsTable() {
                                 'None'
                             )}
                         </TableCell>
-                        <TableCell className="text-right">{getStatusBadge(tx.status)}</TableCell>
+                        <TableCell className="text-right"><StatusBadge status={tx.status} /></TableCell>
                         {tx.status === 'pending' && (
                              <TableCell className="text-right space-x-2">
                                 <Button

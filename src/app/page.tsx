@@ -601,14 +601,11 @@ export default function Home() {
                   onStartDaily={handleStartDailyQuiz}
                   onPayWithCoins={handlePayWithCoins}
                   user={user} 
-                  loading={loading} 
+                  loading={loading || checkingForPastScore || isCheckingPayment || isCheckingDaily}
                   hasPlayedThisWeek={hasPlayedThisWeek} 
-                  checkingForPastScore={checkingForPastScore} 
                   isGeneratingQuiz={isGeneratingQuiz}
                   hasApprovedPaymentThisWeek={hasApprovedPaymentThisWeek}
-                  isCheckingPayment={isCheckingPayment}
                   hasPlayedDailyToday={hasPlayedDailyToday}
-                  isCheckingDaily={isCheckingDaily}
                   coinBalance={userProfile?.coins ?? 0}
                   isPayingWithCoins={isPayingWithCoins}
                 />;

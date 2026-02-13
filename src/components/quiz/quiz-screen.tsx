@@ -64,10 +64,10 @@ export default function QuizScreen({ question, onAnswer, onTimeout, score, quest
       return 'justify-start';
     }
     if (answer.text === selectedAnswer?.text) {
-      return answer.isCorrect ? 'bg-success/10 border-success text-success-foreground hover:bg-success/20 justify-between' : 'bg-destructive/10 border-destructive text-destructive-foreground hover:bg-destructive/20 justify-between';
+      return answer.isCorrect ? 'bg-success/20 border-success text-success-foreground hover:bg-success/30 justify-between' : 'bg-destructive/20 border-destructive text-destructive-foreground hover:bg-destructive/30 justify-between';
     }
     if (answer.isCorrect) {
-      return 'bg-success/10 border-success text-success-foreground justify-between';
+      return 'bg-success/20 border-success text-success-foreground justify-between';
     }
     return 'justify-start opacity-50';
   };
@@ -80,19 +80,19 @@ export default function QuizScreen({ question, onAnswer, onTimeout, score, quest
   }
 
   return (
-    <Card className="w-full bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
+    <Card className="w-full bg-card/80 backdrop-blur-xl border-border/20 shadow-2xl">
       <CardHeader>
         <div className="flex justify-between items-center mb-4">
-            <div className="text-sm text-muted-foreground flex items-center">
-              {isWeeklyQuiz ? "Score: " : <Coins className="h-4 w-4 mr-1 text-accent" />}
-              <span className="font-bold text-primary">{score}</span>
+            <div className="text-sm font-semibold text-muted-foreground flex items-center">
+              {isWeeklyQuiz ? "Score: " : <Coins className="h-4 w-4 mr-1.5 text-accent" />}
+              <span className="font-bold text-lg text-primary">{score}</span>
             </div>
            <div className="flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-sm font-medium text-primary">
             <Clock className="h-4 w-4" />
             <span>{timeLeft}s</span>
           </div>
         </div>
-        <Progress value={(questionNumber / totalQuestions) * 100} className="w-full h-2.5" />
+        <Progress value={(questionNumber / totalQuestions) * 100} className="w-full h-2" />
         <CardTitle className="pt-6 text-center text-xl md:text-2xl">{question?.text}</CardTitle>
       </CardHeader>
       <CardContent>
@@ -102,7 +102,7 @@ export default function QuizScreen({ question, onAnswer, onTimeout, score, quest
               key={index}
               variant="outline"
               size="lg"
-              className={cn("h-auto min-h-[3.5rem] whitespace-normal py-3 transition-all duration-300", getButtonClass(answer))}
+              className={cn("h-auto min-h-[3.5rem] whitespace-normal py-3 text-base", getButtonClass(answer))}
               onClick={() => handleAnswerClick(answer)}
               disabled={isAnswered}
             >

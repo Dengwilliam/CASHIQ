@@ -106,7 +106,7 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
   };
 
   return (
-    <Card className="text-center bg-card/60 backdrop-blur-xl border-primary/20 shadow-xl">
+    <Card className="text-center bg-card/80 backdrop-blur-xl border-border/20 shadow-2xl">
       <CardHeader>
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 mb-4">
           {isWeekly ? <Trophy className="h-12 w-12 text-primary" /> : <Coins className="h-12 w-12 text-primary" />}
@@ -116,10 +116,10 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
           {isWeekly ? `Well done, ${playerName}! Your score will be submitted to the weekly leaderboard.` : `Good job, ${playerName}! You've earned some coins.`}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <div className="text-center p-6 bg-secondary rounded-lg">
           <p className="text-sm text-muted-foreground">{isWeekly ? 'Your Final Score' : 'Coins Earned'}</p>
-          <p className="text-5xl font-bold text-primary">{score}</p>
+          <p className="text-6xl font-black text-primary">{score}</p>
         </div>
         <p className="text-muted-foreground italic">{getResultMessage()}</p>
          {newlyAwardedBadges.length > 0 && (
@@ -138,7 +138,7 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
 
         <div className="pt-6 text-left">
           <h3 className="text-xl font-bold mb-4 text-center">Share Your Results</h3>
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-4">
             {isGeneratingImage && (
               <div className="flex flex-col items-center gap-2">
                 <Skeleton className="w-[300px] h-[157.5px] rounded-lg" />
@@ -153,6 +153,16 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
                   <p className="text-sm text-destructive-foreground font-semibold">Sorry, we couldn't generate your share card.</p>
               </div>
             )}
+            <div className="flex gap-4">
+              <Button onClick={handleShare} size="lg" disabled={isGeneratingImage || !shareImageSvg}>
+                <Share2 className="mr-2 h-5 w-5" />
+                Share
+              </Button>
+              <Button onClick={handleDownload} size="lg" variant="secondary" disabled={isGeneratingImage || !shareImageSvg}>
+                  <Download className="mr-2 h-5 w-5" />
+                  Download
+              </Button>
+          </div>
           </div>
         </div>
 
@@ -203,19 +213,6 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
               </Link>
             </Button>
         )}
-      </CardFooter>
-      <CardFooter className="flex-col gap-4 pt-4 border-t border-border/20 mt-4">
-        <p className="text-sm text-muted-foreground">Challenge a friend</p>
-        <div className="flex gap-4">
-            <Button onClick={handleShare} size="lg" disabled={isGeneratingImage || !shareImageSvg}>
-              <Share2 className="mr-2 h-5 w-5" />
-              Share
-            </Button>
-            <Button onClick={handleDownload} size="lg" variant="secondary" disabled={isGeneratingImage || !shareImageSvg}>
-                <Download className="mr-2 h-5 w-5" />
-                Download
-            </Button>
-        </div>
       </CardFooter>
     </Card>
   );

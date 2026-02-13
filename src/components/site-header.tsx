@@ -14,19 +14,15 @@ export default function SiteHeader() {
                 <CashIqLogo className="h-7 w-7 text-primary" />
                 <h1 className="text-xl font-bold tracking-tighter">CashIQ</h1>
             </Link>
-            <nav className="hidden md:flex items-center gap-1">
-                <Button variant="ghost" asChild>
-                    <Link href="/leaderboard">
-                        <BarChart3 />
-                        Leaderboard
-                    </Link>
-                </Button>
-                <Button variant="ghost" asChild>
-                    <Link href="/about">
-                        <Info />
-                        About
-                    </Link>
-                </Button>
+            <nav className="hidden md:flex items-center gap-2">
+                <Link href="/leaderboard" className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                  <BarChart3 className="h-5 w-5" />
+                  Leaderboard
+                </Link>
+                <Link href="/about" className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                  <Info className="h-5 w-5" />
+                  About
+                </Link>
             </nav>
             <div className="flex items-center gap-2">
                 <div className="md:hidden">

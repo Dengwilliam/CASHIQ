@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, BarChart, CircleDollarSign, Loader2, Wallet, Award, Coins, Calendar, Trophy } from 'lucide-react';
+import { ArrowRight, BarChart, Loader2, Wallet, Award, Coins, Calendar, Trophy } from 'lucide-react';
 import type { User } from 'firebase/auth';
 import Link from 'next/link';
 import LivePrizePool from '@/components/live-prize-pool';
@@ -14,34 +14,17 @@ type StartScreenProps = {
   user: User | null;
   loading: boolean;
   hasPlayedThisWeek: boolean | null;
-  checkingForPastScore: boolean;
   isGeneratingQuiz: boolean;
   hasApprovedPaymentThisWeek: boolean | null;
-  isCheckingPayment: boolean;
   hasPlayedDailyToday: boolean | null;
-  isCheckingDaily: boolean;
   coinBalance: number;
   isPayingWithCoins: boolean;
 };
 
-export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoins, user, loading, hasPlayedThisWeek, checkingForPastScore, isGeneratingQuiz, hasApprovedPaymentThisWeek, isCheckingPayment, hasPlayedDailyToday, isCheckingDaily, coinBalance, isPayingWithCoins }: StartScreenProps) {
+export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoins, user, loading, hasPlayedThisWeek, isGeneratingQuiz, hasApprovedPaymentThisWeek, hasPlayedDailyToday, coinBalance, isPayingWithCoins }: StartScreenProps) {
   
-  const handleWeeklySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (user && !hasPlayedThisWeek && hasApprovedPaymentThisWeek) {
-      onStartWeekly();
-    }
-  };
-
-  const handleDailySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (user && !hasPlayedDailyToday) {
-      onStartDaily();
-    }
-  };
-
   const renderWeeklyFooter = () => {
-    if (loading || checkingForPastScore || isCheckingPayment) {
+    if (loading) {
       return (
         <Button className="w-full" size="lg" disabled>
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -59,35 +42,31 @@ export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoin
     }
     if (!user) {
       return (
-        <div className="text-center w-full">
-          <p className="text-muted-foreground">Please log in to play.</p>
-        </div>
+        <Button asChild className="w-full" size="lg">
+          <Link href="/login">Log In to Play</Link>
+        </Button>
       );
     }
     if (hasPlayedThisWeek) {
       return (
-        <div className="w-full flex flex-col items-center gap-4">
-            <p className="text-center text-muted-foreground">You've already played this week! Come back on Monday for a new challenge.</p>
-            <Button asChild className="w-full" size="lg">
-                <Link href="/leaderboard">
-                    <BarChart className="mr-2 h-5 w-5" />
-                    View Leaderboard
-                </Link>
-            </Button>
-        </div>
+        <Button asChild className="w-full" size="lg">
+          <Link href="/leaderboard">
+              <BarChart className="mr-2 h-5 w-5" />
+              View Leaderboard
+          </Link>
+        </Button>
       );
     }
     if (!hasApprovedPaymentThisWeek) {
       return (
-        <div className="w-full flex flex-col items-center gap-4">
-            <p className="text-center text-muted-foreground">Pay the weekly entry fee to play.</p>
+        <div className="w-full flex flex-col items-center gap-3">
             <Button asChild className="w-full" size="lg">
                 <Link href="/wallet">
                     <Wallet className="mr-2 h-5 w-5" />
                     Pay with MoMo
                 </Link>
             </Button>
-            <div className="relative w-full flex items-center justify-center my-2">
+            <div className="relative w-full flex items-center justify-center">
                 <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t" />
                 </div>
@@ -115,7 +94,7 @@ export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoin
       );
     }
     return (
-       <Button type="submit" className="w-full" size="lg" disabled={isGeneratingQuiz}>
+       <Button onClick={onStartWeekly} className="w-full" size="lg" disabled={isGeneratingQuiz}>
           Start Weekly Challenge
           <ArrowRight className="ml-2 h-5 w-5" />
         </Button>
@@ -123,7 +102,7 @@ export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoin
   }
 
   const renderDailyFooter = () => {
-     if (loading || isCheckingDaily) {
+     if (loading) {
       return (
         <Button className="w-full" size="lg" disabled>
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -140,13 +119,17 @@ export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoin
         );
     }
     if (!user) {
-      return <p className="text-muted-foreground text-center w-full">Please log in to play.</p>;
+      return (
+        <Button asChild className="w-full" size="lg" variant="secondary">
+          <Link href="/login">Log In to Play</Link>
+        </Button>
+      );
     }
     if (hasPlayedDailyToday) {
-      return <p className="text-muted-foreground text-center w-full">You've played today. Come back tomorrow for a new quiz!</p>;
+      return <p className="text-muted-foreground text-center text-sm w-full">You've played today. Come back tomorrow for a new quiz!</p>;
     }
     return (
-      <Button type="submit" className="w-full" size="lg" disabled={isGeneratingQuiz}>
+      <Button onClick={onStartDaily} className="w-full" size="lg" variant="secondary" disabled={isGeneratingQuiz}>
           Start Daily Quiz
           <ArrowRight className="ml-2 h-5 w-5" />
       </Button>
@@ -154,85 +137,51 @@ export default function StartScreen({ onStartWeekly, onStartDaily, onPayWithCoin
   }
 
   return (
-    <>
-      <div className="text-center">
+    <Card className="w-full max-w-4xl text-center bg-card/80 backdrop-blur-xl border-border/20 shadow-2xl">
+      <CardHeader className="pb-0">
         <h1 className="text-4xl sm:text-5xl font-black text-foreground tracking-tight">
           Learn. Play. Earn.
         </h1>
         <p className="text-base sm:text-lg text-foreground/80 pt-2 max-w-2xl mx-auto">
           Quiz Smart. Win Big.
         </p>
-        {user && (
+        {user && !loading && (
             <div className="text-base pt-4">
               Welcome back, <span className="font-bold text-primary">{user.displayName}!</span>
             </div>
         )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8 w-full">
-        {/* Weekly Challenge Card */}
-        <Card className="bg-card/80 backdrop-blur-lg border-white/5 shadow-xl flex flex-col">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-3"><Trophy className="text-primary"/> Weekly Challenge</CardTitle>
-                <CardDescription>Top 4 players win a share of the total weekly prize pool!</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 space-y-4">
-                <LivePrizePool />
-                <div className="text-center p-4 bg-secondary rounded-lg">
-                    <p className="text-sm text-muted-foreground">Entry Fee</p>
-                    <p className="text-2xl font-bold text-primary">25,000 SSP or 1,000 Coins</p>
-                </div>
-                 <div className="grid grid-cols-4 gap-3">
-                    <div className="p-3 bg-primary/10 rounded-lg text-center border border-primary/20">
-                        <p className="font-black text-lg text-primary">1st</p>
-                        <p className="text-xs font-semibold text-foreground">30%</p>
-                    </div>
-                    <div className="p-3 bg-secondary rounded-lg text-center">
-                        <p className="font-black text-lg text-primary/80">2nd</p>
-                        <p className="text-xs font-semibold text-foreground">20%</p>
-                    </div>
-                    <div className="p-3 bg-secondary rounded-lg text-center">
-                        <p className="font-black text-lg text-primary/80">3rd</p>
-                        <p className="text-xs font-semibold text-foreground">10%</p>
-                    </div>
-                    <div className="p-3 bg-secondary rounded-lg text-center">
-                        <p className="font-black text-lg text-primary/80">4th</p>
-                        <p className="text-xs font-semibold text-foreground">5%</p>
+      </CardHeader>
+      <CardContent>
+        <LivePrizePool />
+        <div className="grid md:grid-cols-2 gap-6 mt-8">
+            {/* Weekly Challenge */}
+            <div className="flex flex-col gap-4 p-6 bg-secondary/50 rounded-lg border">
+                <div className="flex-1 space-y-4">
+                    <h3 className="font-bold text-2xl flex items-center justify-center gap-3"><Trophy className="text-primary"/> Weekly Challenge</h3>
+                    <p className="text-muted-foreground">Top 4 players win a share of the total weekly prize pool!</p>
+                     <div className="text-center p-4 bg-background/50 rounded-lg">
+                        <p className="text-sm text-muted-foreground">Entry Fee</p>
+                        <p className="text-2xl font-bold text-primary">25,000 SSP or 1,000 Coins</p>
                     </div>
                 </div>
-            </CardContent>
-            <CardFooter>
-              <form onSubmit={handleWeeklySubmit} className="w-full">
                 {renderWeeklyFooter()}
-              </form>
-            </CardFooter>
-        </Card>
-
-        {/* Daily Quiz Card */}
-        <Card className="bg-card/80 backdrop-blur-lg border-white/5 shadow-xl flex flex-col">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-3"><Calendar className="text-accent" /> Daily Quiz</CardTitle>
-                <CardDescription>A quick 5-question quiz to test your knowledge and earn coins every day!</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 space-y-4">
-                <div className="text-center p-4 bg-secondary rounded-lg">
-                    <p className="text-sm text-muted-foreground">Entry Fee</p>
-                    <p className="text-2xl font-bold text-primary">FREE</p>
+            </div>
+            {/* Daily Quiz */}
+            <div className="flex flex-col gap-4 p-6 bg-secondary/50 rounded-lg border">
+                <div className="flex-1 space-y-4">
+                    <h3 className="font-bold text-2xl flex items-center justify-center gap-3"><Calendar className="text-accent" /> Daily Quiz</h3>
+                    <p className="text-muted-foreground">A quick 5-question quiz to test your knowledge and earn coins every day!</p>
+                    <div className="text-center p-4 bg-background/50 rounded-lg">
+                        <h4 className="text-lg font-semibold text-accent flex items-center justify-center gap-2"><Award /> Daily Prize</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Earn <strong className="text-foreground">5 coins</strong> for every correct answer. Use coins to enter the weekly challenge!
+                        </p>
+                    </div>
                 </div>
-                 <div className="text-center p-4 border border-dashed border-accent/50 rounded-lg flex-1 flex flex-col justify-center">
-                    <h3 className="text-lg font-semibold text-accent flex items-center justify-center gap-2"><Award /> Daily Prize</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        Earn <strong className="text-foreground">5 coins</strong> for every correct answer. Use coins to enter the weekly challenge!
-                    </p>
-                </div>
-            </CardContent>
-            <CardFooter>
-              <form onSubmit={handleDailySubmit} className="w-full">
                 {renderDailyFooter()}
-              </form>
-            </CardFooter>
-        </Card>
-      </div>
-    </>
+            </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { collection, query, addDoc, serverTimestamp, type Timestamp } from 'firebase/firestore';
-import { Badge, FileText, Send, Landmark, Image as ImageIcon, Coins } from 'lucide-react';
+import { FileText, Send, Landmark, Image as ImageIcon, Coins } from 'lucide-react';
 
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge as UiBadge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -72,19 +72,6 @@ function HistorySkeleton() {
         </Table>
     );
 }
-
-const getStatusBadge = (status: 'pending' | 'approved' | 'rejected') => {
-    switch (status) {
-        case 'pending':
-            return <UiBadge variant="secondary">Pending</UiBadge>;
-        case 'approved':
-            return <UiBadge className="bg-success/20 text-success-foreground border border-success/50 hover:bg-success/30">Approved</UiBadge>;
-        case 'rejected':
-            return <UiBadge variant="destructive">Rejected</UiBadge>;
-        default:
-            return <UiBadge variant="outline">{status}</UiBadge>;
-    }
-};
 
 export default function WalletPage() {
     const { user, loading: userLoading } = useUser();
@@ -316,7 +303,7 @@ export default function WalletPage() {
                                                 `${tx.amount.toLocaleString()} SSP`
                                             )}
                                         </TableCell>
-                                       <TableCell className="text-right">{getStatusBadge(tx.status)}</TableCell>
+                                       <TableCell className="text-right"><StatusBadge status={tx.status} /></TableCell>
                                    </TableRow>
                                ))}
                            </TableBody>
