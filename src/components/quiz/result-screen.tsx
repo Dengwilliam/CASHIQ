@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trophy, RotateCw, Award, CheckCircle, XCircle, Coins, Share2, Download } from 'lucide-react';
+import { Trophy, RotateCw, Award, CheckCircle, XCircle, Coins, Share2, Download, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -26,15 +26,18 @@ type ResultScreenProps = {
   newlyAwardedBadges?: string[];
   answeredQuestions?: AnsweredQuestion[];
   quizType: 'weekly' | 'daily' | null;
+  isDisqualified?: boolean;
 };
 
 
-export default function ResultScreen({ score, onRestart, playerName, newlyAwardedBadges = [], answeredQuestions = [], quizType }: ResultScreenProps) {
+export default function ResultScreen({ score, onRestart, playerName, newlyAwardedBadges = [], answeredQuestions = [], quizType, isDisqualified = false }: ResultScreenProps) {
   const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const isWeekly = quizType === 'weekly';
 
   useEffect(() => {
+    if (isDisqualified) return;
+
     const generateImage = async () => {
       if (!quizType) return;
       setIsGeneratingImage(true);
@@ -56,10 +59,11 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
     };
 
     generateImage();
-  }, [playerName, score, quizType, newlyAwardedBadges]);
+  }, [playerName, score, quizType, newlyAwardedBadges, isDisqualified]);
 
 
   const getResultMessage = () => {
+    if (isDisqualified) return "Fair play is important. Your score for this week is 0.";
     if (isWeekly) {
         if (score >= 80) return "Excellent! You're a financial genius!";
         if (score >= 50) return "Good job! You have a solid understanding.";
@@ -109,6 +113,35 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
     }
   };
 
+  if (isDisqualified) {
+    return (
+       <Card className="text-center bg-card/80 backdrop-blur-xl border-destructive/50 shadow-2xl">
+        <CardHeader>
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10 mb-4">
+            <ShieldAlert className="h-12 w-12 text-destructive" />
+          </div>
+          <CardTitle className="text-3xl font-bold text-destructive">Disqualified</CardTitle>
+          <CardDescription className="pt-2 text-base">
+            You were disqualified for switching tabs during the quiz.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            <div className="text-center p-6 bg-secondary rounded-lg">
+                <p className="text-sm text-muted-foreground">Your Final Score</p>
+                <p className="text-6xl font-black text-destructive">0</p>
+            </div>
+            <p className="text-muted-foreground italic">{getResultMessage()}</p>
+        </CardContent>
+        <CardFooter className="flex-col sm:flex-row gap-2">
+            <Button onClick={onRestart} className="w-full" size="lg">
+              <RotateCw className="mr-2 h-5 w-5" />
+              Back to Home
+            </Button>
+      </CardFooter>
+      </Card>
+    );
+  }
+
   return (
     <Card className="text-center bg-card/80 backdrop-blur-xl border-border/20 shadow-2xl">
       <CardHeader>
@@ -140,7 +173,7 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
             </div>
         )}
 
-        <div className="pt-6 text-left">
+        {!isDisqualified && <div className="pt-6 text-left">
           <h3 className="text-xl font-bold mb-4 text-center">Share Your Results</h3>
           <div className="flex flex-col items-center gap-4">
             {isGeneratingImage && (
@@ -176,9 +209,9 @@ export default function ResultScreen({ score, onRestart, playerName, newlyAwarde
               </Button>
           </div>
           </div>
-        </div>
+        </div>}
 
-        {answeredQuestions.length > 0 && (
+        {answeredQuestions.length > 0 && !isDisqualified && (
             <div className="pt-6 text-left">
                 <h3 className="text-xl font-bold mb-3 text-center">Quiz Review</h3>
                 <Accordion type="single" collapsible className="w-full">

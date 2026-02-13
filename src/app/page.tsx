@@ -34,7 +34,6 @@ type AnsweredQuestion = {
 const WEEKLY_QUESTIONS_PER_GAME = 20;
 const DAILY_QUESTIONS_PER_GAME = 5;
 const COINS_PER_CORRECT_ANSWER = 5;
-const TAB_SWITCH_PENALTY = 5;
 const WEEKLY_ENTRY_COIN_COST = 1000;
 
 
@@ -63,6 +62,8 @@ export default function Home() {
   const [maxHotStreak, setMaxHotStreak] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [lastGameReward, setLastGameReward] = useState(0);
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [isDisqualified, setIsDisqualified] = useState(false);
 
 
   const firestore = useFirestore();
@@ -129,14 +130,22 @@ export default function Home() {
       if (!firestore || !user || !quizType) return;
   
       if (quizType === 'weekly') {
-        setLastGameReward(score);
+        const finalScore = isDisqualified ? 0 : score;
+        setLastGameReward(finalScore);
+        
         // 1. Save the current score and wait for it to complete
         await saveScore(firestore, {
           playerName: user.displayName || 'Anonymous',
-          score,
+          score: finalScore,
           userId: user.uid,
         });
-    
+        
+        // Don't award badges or process streaks if disqualified
+        if(isDisqualified) {
+            setHasPlayedThisWeek(true);
+            return;
+        }
+
         const newBadges: string[] = [];
         const userRef = doc(firestore, 'users', user.uid);
         let userProfileData: DocumentData | null = null;
@@ -154,8 +163,8 @@ export default function Home() {
         }
     
         // --- BADGE LOGIC ---
-        if (score >= 80) newBadges.push('Finance Whiz');
-        if (score === 100) newBadges.push('Perfect Score');
+        if (finalScore >= 80) newBadges.push('Finance Whiz');
+        if (finalScore === 100) newBadges.push('Perfect Score');
         if (maxHotStreak >= 5) newBadges.push('Hot Streak');
     
         const scoresQuery = query(
@@ -175,7 +184,7 @@ export default function Home() {
             const previousScores = allScores.slice(1);
             if (previousScores.length > 0) {
                 const previousHighScore = Math.max(...previousScores.map(s => s.score));
-                if (score > previousHighScore) {
+                if (finalScore > previousHighScore) {
                     newBadges.push('Comeback Kid');
                 }
             }
@@ -257,7 +266,7 @@ export default function Home() {
     if (gameState === 'results') {
       processEndGame();
     }
-  }, [gameState, firestore, user, score, maxHotStreak, quizType, answeredQuestions, userProfile]);
+  }, [gameState, firestore, user, score, maxHotStreak, quizType, answeredQuestions, userProfile, isDisqualified]);
 
   useEffect(() => {
     const checkUserScore = () => {
@@ -370,13 +379,29 @@ export default function Home() {
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden && gameState === "quiz") {
-        setScore((prevScore) => Math.max(0, prevScore - TAB_SWITCH_PENALTY));
-        toast({
-          title: "Penalty Applied",
-          description: `You lost ${TAB_SWITCH_PENALTY} points for switching tabs.`,
-          variant: "destructive",
-        });
+      // Only apply anti-cheat to weekly quiz
+      if (document.hidden && gameState === "quiz" && quizType === 'weekly') {
+        const newCount = tabSwitchCount + 1;
+        setTabSwitchCount(newCount);
+
+        if (newCount === 1) {
+           toast({
+              title: "Warning: Cheating is not allowed",
+              description: "Switching tabs again will result in disqualification and a score of 0.",
+              variant: "destructive",
+              duration: 7000,
+            });
+        } else if (newCount >= 2) {
+           toast({
+              title: "Disqualified",
+              description: "You have been disqualified for switching tabs. Your score is 0.",
+              variant: "destructive",
+              duration: 9000,
+            });
+            setScore(0);
+            setIsDisqualified(true);
+            setGameState("results");
+        }
       }
     };
 
@@ -384,7 +409,7 @@ export default function Home() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [gameState, toast]);
+  }, [gameState, toast, tabSwitchCount, quizType]);
 
   const handleStartWeeklyQuiz = async () => {
     if (!user) {
@@ -417,6 +442,8 @@ export default function Home() {
     setAnsweredQuestions([]);
     setHotStreak(0);
     setMaxHotStreak(0);
+    setTabSwitchCount(0);
+    setIsDisqualified(false);
     setQuizType('weekly');
     await setupWeeklyQuiz();
   };
@@ -587,12 +614,13 @@ export default function Home() {
         );
       case "results":
         return <ResultScreen 
-                  score={lastGameReward} 
+                  score={isDisqualified ? 0 : lastGameReward}
                   onRestart={handleRestart} 
                   playerName={user?.displayName || 'Player'} 
                   newlyAwardedBadges={newlyAwardedBadges} 
                   answeredQuestions={answeredQuestions}
                   quizType={quizType}
+                  isDisqualified={isDisqualified}
                />;
       case "start":
       default:
