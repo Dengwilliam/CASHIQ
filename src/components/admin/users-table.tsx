@@ -1,12 +1,14 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import UserDetailDialog from './user-detail-dialog';
 
 type UserProfile = {
     id: string;
@@ -31,6 +33,7 @@ function TableSkeleton() {
 
 export default function UsersTable() {
     const firestore = useFirestore();
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
     const usersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -61,35 +64,52 @@ export default function UsersTable() {
     }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-3"><Users /> User Payout Information</CardTitle>
-                <CardDescription>A list of all users and their registered MoMo numbers for payouts.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 {loading ? <TableSkeleton /> : sortedUsers && sortedUsers.length > 0 ? (
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Display Name</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>MoMo Number</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {sortedUsers.map(user => (
-                                <TableRow key={user.id}>
-                                    <TableCell className="font-medium">{user.displayName}</TableCell>
-                                    <TableCell>{user.email}</TableCell>
-                                    <TableCell className="font-mono text-sm">{user.momoNumber || 'Not set'}</TableCell>
+        <>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-3"><Users /> User Payout Information</CardTitle>
+                    <CardDescription>A list of all users and their registered MoMo numbers for payouts.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {loading ? <TableSkeleton /> : sortedUsers && sortedUsers.length > 0 ? (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Display Name</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>MoMo Number</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                ) : (
-                    <p className="text-center text-muted-foreground p-8">No users found.</p>
-                )}
-            </CardContent>
-        </Card>
+                            </TableHeader>
+                            <TableBody>
+                                {sortedUsers.map(user => (
+                                    <TableRow key={user.id}>
+                                        <TableCell className="font-medium">{user.displayName}</TableCell>
+                                        <TableCell>{user.email}</TableCell>
+                                        <TableCell className="font-mono text-sm">{user.momoNumber || 'Not set'}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="outline" size="sm" onClick={() => setSelectedUserId(user.id)}>
+                                                View Profile
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                        <p className="text-center text-muted-foreground p-8">No users found.</p>
+                    )}
+                </CardContent>
+            </Card>
+            <UserDetailDialog 
+                userId={selectedUserId}
+                isOpen={!!selectedUserId}
+                onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        setSelectedUserId(null);
+                    }
+                }}
+            />
+        </>
     );
 }

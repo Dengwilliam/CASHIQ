@@ -110,3 +110,37 @@ export const updateTransactionStatus = (
         throw new Error(`Failed to update transaction status: ${serverError.message}`);
     });
 };
+
+export const adjustPrizePool = async (
+  db: Firestore,
+  adjustmentAmount: number
+) => {
+    if (typeof adjustmentAmount !== 'number' || isNaN(adjustmentAmount)) {
+        throw new Error("Invalid adjustment amount.");
+    }
+    const today = new Date();
+    const weekStartDate = startOfWeek(today, { weekStartsOn: 1 });
+    const weekId = format(weekStartDate, 'yyyy-MM-dd');
+    const prizePoolRef = doc(db, 'prizePools', weekId);
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            const prizePoolDoc = await transaction.get(prizePoolRef);
+
+            if (!prizePoolDoc.exists()) {
+                 if (adjustmentAmount > 0) {
+                    transaction.set(prizePoolRef, {
+                        total: adjustmentAmount,
+                        startDate: weekStartDate,
+                    });
+                }
+            } else {
+                transaction.update(prizePoolRef, { total: increment(adjustmentAmount) });
+            }
+        });
+    } catch (e) {
+        console.error("Prize pool adjustment transaction failed: ", e);
+        // Re-throw a more user-friendly error
+        throw new Error(`Failed to adjust prize pool: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    }
+};
