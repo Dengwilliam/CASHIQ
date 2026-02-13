@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collectionGroup, query, orderBy } from 'firebase/firestore';
+import { collectionGroup, query } from 'firebase/firestore';
 import type { Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -51,19 +51,21 @@ export default function TransactionsTable() {
 
     const transactionsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return query(
-            collectionGroup(firestore, 'payment-transactions'),
-            orderBy('createdAt', 'desc')
-        );
+        // Removed orderBy to avoid needing a composite index. Sorting is now done on the client.
+        return query(collectionGroup(firestore, 'payment-transactions'));
     }, [firestore]);
 
     const { data: transactions, loading, error } = useCollection<PaymentTransaction>(transactionsQuery);
 
     const filteredTransactions = useMemo(() => {
+        const sorted = transactions
+          ? [...transactions].sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis())
+          : [];
+
         return {
-            pending: transactions?.filter(t => t.status === 'pending') || [],
-            approved: transactions?.filter(t => t.status === 'approved') || [],
-            rejected: transactions?.filter(t => t.status === 'rejected') || [],
+            pending: sorted.filter(t => t.status === 'pending'),
+            approved: sorted.filter(t => t.status === 'approved'),
+            rejected: sorted.filter(t => t.status === 'rejected'),
         };
     }, [transactions]);
 
