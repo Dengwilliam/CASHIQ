@@ -11,7 +11,7 @@ export default function SiteHeader() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
             <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-                <CashIqLogo className="h-7 w-7 text-accent" />
+                <CashIqLogo className="h-7 w-7 text-primary" />
                 <h1 className="text-xl font-bold tracking-tighter">CashIQ</h1>
             </Link>
             <nav className="hidden md:flex items-center gap-1">
