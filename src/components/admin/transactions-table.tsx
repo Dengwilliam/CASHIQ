@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collectionGroup, query } from 'firebase/firestore';
+import { collectionGroup, query, getDocs, collection } from 'firebase/firestore';
 import type { Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Check, X, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { StatusBadge } from '@/components/ui/status-badge';
+import type { UserProfile } from '@/lib/user-profile';
 
 type PaymentTransaction = {
     id: string;
@@ -48,21 +49,64 @@ export default function TransactionsTable() {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [updatingId, setUpdatingId] = useState<string | null>(null);
+    const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
 
-    const transactionsQuery = useMemoFirebase(() => {
+    const usersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        // Removed `orderBy` to avoid needing a composite index. Sorting is now done client-side.
-        return query(collectionGroup(firestore, 'payment-transactions'));
+        return query(collection(firestore, 'users'));
     }, [firestore]);
 
-    const { data: transactions, loading, error } = useCollection<PaymentTransaction>(transactionsQuery);
+    const { data: users, loading: usersLoading, error: usersError } = useCollection<UserProfile>(usersQuery);
+
+    useEffect(() => {
+        if (usersError) {
+            setError(usersError);
+            setLoading(false);
+            return;
+        }
+
+        if (!firestore || usersLoading || !users) {
+            return;
+        }
+
+        setLoading(true);
+
+        const fetchAllTransactions = async () => {
+            try {
+                const allTransactions: PaymentTransaction[] = [];
+                const transactionPromises = users.map(user => {
+                    const userTransactionsQuery = query(collection(firestore, 'users', user.id, 'payment-transactions'));
+                    return getDocs(userTransactionsQuery);
+                });
+                
+                const userTransactionsSnapshots = await Promise.all(transactionPromises);
+                
+                userTransactionsSnapshots.forEach(snapshot => {
+                    snapshot.forEach(doc => {
+                        allTransactions.push({ id: doc.id, ...doc.data() } as PaymentTransaction);
+                    });
+                });
+                setTransactions(allTransactions);
+                setError(null);
+            } catch (e: any) {
+                setError(e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAllTransactions();
+    }, [firestore, users, usersLoading, usersError]);
+
 
     const sortedTransactions = useMemo(() => {
         if (!transactions) return [];
         return [...transactions].sort((a, b) => {
             if (!a.createdAt) return 1; // Push items without a timestamp to the end
             if (!b.createdAt) return -1;
-            return b.createdAt.toMillis() - a.createdAt.toMillis();
+            return b.createdAt.toMillis() - b.createdAt.toMillis();
         });
     }, [transactions]);
 
@@ -83,6 +127,16 @@ export default function TransactionsTable() {
                 title: 'Success',
                 description: `Transaction has been ${status}.`,
             });
+            // Refetch transactions after update
+            setLoading(true);
+            const updatedTransactions = [...transactions];
+            const txIndex = updatedTransactions.findIndex(tx => tx.id === transactionId);
+            if (txIndex > -1) {
+                updatedTransactions[txIndex].status = status;
+                setTransactions(updatedTransactions);
+            }
+            setLoading(false);
+
         } catch (error) {
             toast({
                 title: 'Error',
@@ -101,7 +155,7 @@ export default function TransactionsTable() {
                      <div className="text-center text-destructive p-4 border border-destructive/50 bg-destructive/10 rounded-md">
                         <p className="font-bold">Could not load transactions.</p>
                         <p className="text-sm mt-2">
-                            This can happen if the database query needs a special configuration. If you see a link in your browser's developer console to create an index, please click it and then refresh this page.
+                            There was an error fetching the transaction data. Please check your connection and permissions.
                         </p>
                         <p className="text-xs mt-2 font-mono">{error.message}</p>
                     </div>
