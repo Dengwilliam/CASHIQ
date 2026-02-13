@@ -19,6 +19,9 @@ import { FirestorePermissionError } from "@/firebase/errors";
 import OnboardingTour from "@/components/onboarding-tour";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import type { UserProfile } from "@/lib/user-profile";
+import { useAdmin } from "@/hooks/useAdmin";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 
 type GameState = "start" | "quiz" | "results";
@@ -67,7 +70,9 @@ export default function Home() {
 
 
   const firestore = useFirestore();
-  const { user, loading } = useUser();
+  const { user, loading: userLoading } = useUser();
+  const { isAdmin, loading: adminLoading } = useAdmin();
+  const router = useRouter();
   const { toast } = useToast();
 
   const userProfileRef = useMemoFirebase(() => {
@@ -76,6 +81,12 @@ export default function Home() {
   }, [firestore, user]);
 
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>(userProfileRef);
+
+  useEffect(() => {
+    if (!adminLoading && isAdmin) {
+      router.push('/admin');
+    }
+  }, [isAdmin, adminLoading, router]);
 
   useEffect(() => {
     // Check if onboarding tour should be shown for new users.
@@ -598,6 +609,13 @@ export default function Home() {
     setGameState("start");
     setQuizType(null);
   };
+  
+  const renderLoading = () => (
+    <div className="flex h-full w-full flex-col items-center justify-center p-4">
+      <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      <p className="mt-4 text-muted-foreground">Loading...</p>
+    </div>
+  );
 
   const renderGameState = () => {
     switch (gameState) {
@@ -629,7 +647,7 @@ export default function Home() {
                   onStartDaily={handleStartDailyQuiz}
                   onPayWithCoins={handlePayWithCoins}
                   user={user} 
-                  loading={loading || checkingForPastScore || isCheckingPayment || isCheckingDaily}
+                  loading={userLoading || checkingForPastScore || isCheckingPayment || isCheckingDaily}
                   hasPlayedThisWeek={hasPlayedThisWeek} 
                   isGeneratingQuiz={isGeneratingQuiz}
                   hasApprovedPaymentThisWeek={hasApprovedPaymentThisWeek}
@@ -639,6 +657,14 @@ export default function Home() {
                 />;
     }
   };
+  
+  if (userLoading || adminLoading) {
+    return renderLoading();
+  }
+
+  if (isAdmin) {
+    return renderLoading(); // Or a specific "Redirecting..." message
+  }
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center p-4">
@@ -649,3 +675,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
