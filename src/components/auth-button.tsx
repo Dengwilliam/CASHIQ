@@ -50,18 +50,22 @@ export default function AuthButton() {
               </Link>
             </DropdownMenuItem>
           )}
-           <DropdownMenuItem asChild>
-            <Link href="/profile">
-              <UserIcon className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/wallet">
-              <Wallet className="mr-2 h-4 w-4" />
-              <span>Wallet</span>
-            </Link>
-          </DropdownMenuItem>
+          {!isAdmin && (
+            <>
+              <DropdownMenuItem asChild>
+                <Link href="/profile">
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/wallet">
+                  <Wallet className="mr-2 h-4 w-4" />
+                  <span>Wallet</span>
+                </Link>
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => handleSignOut(auth)}>
             <LogOut className="mr-2 h-4 w-4" />
