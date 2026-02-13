@@ -1,22 +1,24 @@
 import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
 
-// IMPORTANT: You must configure this with an API key from resend.com
-// and store it in your .env file.
+// The RESEND_API_KEY is retrieved from environment variables.
+// For local development, set this in your .env file.
+// For production, this is set in apphosting.yaml.
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// IMPORTANT: You must have a verified domain with Resend to use this email address.
-// Replace this with your own sending address.
-const fromEmail = 'CashIQ <noreply@cashiq.com>';
+// IMPORTANT: You must have a verified domain with Resend.
+// Replace `your-verified-domain.com` with the domain you have verified in your Resend account.
+const fromEmail = 'CashIQ <noreply@your-verified-domain.com>';
 
 export async function POST(request: Request) {
   try {
     const { to, subject, htmlBody } = await request.json();
 
-    if (!process.env.RESEND_API_KEY) {
-        console.error('RESEND_API_KEY is not set. Email will not be sent.');
-        // Fail silently on the server so the client-side experience isn't broken.
-        return NextResponse.json({ message: 'Email server not configured.' });
+    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 'YOUR_RESEND_API_KEY') {
+        console.warn('RESEND_API_KEY is not set or is a placeholder. Email will not be sent.');
+        // Fail silently on the server so the client-side experience isn't broken,
+        // but provide a clear warning in the server logs.
+        return NextResponse.json({ message: 'Email server not configured. RESEND_API_KEY is missing.' }, { status: 200 });
     }
 
     const { data, error } = await resend.emails.send({
