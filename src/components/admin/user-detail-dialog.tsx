@@ -71,13 +71,25 @@ export default function UserDetailDialog({ userId, isOpen, onOpenChange }: UserD
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-2xl">
                 {loading || !userProfile ? (
-                    <div className="space-y-4 p-4">
-                        <DialogHeader>
-                            <Skeleton className="h-8 w-48" />
-                            <Skeleton className="h-5 w-64" />
+                    <>
+                        <DialogHeader className="text-left">
+                            <DialogTitle className="sr-only">Loading User Details</DialogTitle>
+                            <DialogDescription className="sr-only">Please wait while the user information is loading.</DialogDescription>
+                            <div className="flex items-center gap-4">
+                                <Skeleton className="h-16 w-16 rounded-full" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-7 w-48" />
+                                    <Skeleton className="h-5 w-64" />
+                                </div>
+                            </div>
                         </DialogHeader>
-                        <Skeleton className="h-48 w-full" />
-                    </div>
+                        <div className="space-y-6 py-4 max-h-[60vh] overflow-y-auto pr-2">
+                            <Skeleton className="h-20 w-full" />
+                            <Skeleton className="h-12 w-full" />
+                            <Skeleton className="h-24 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                    </>
                 ) : (
                     <>
                         <DialogHeader className="text-left">
